@@ -9,6 +9,7 @@
     "test:coalition": "jest --testPathPatterns=products/coalition --runInBand --testSequencer=./src/tests/coalitionTestSequencer.js",
     "test:ahp": "jest --testPathPatterns=products/ahp",
     "test:viz": "jest --testPathPatterns=products/viz --runInBand --testSequencer=./src/tests/vizTestSequencer.js",
+    "test:ci": "jest --testPathIgnorePatterns=products/viz --runInBand",
     "test:report": "jest && open reports/test-report.html"
   },
   "keywords": [
