@@ -69,6 +69,28 @@ jobs:
             FAILED=$(jq -r '.numFailedTests // 0' reports/test-results.json)
             TOTAL=$(jq -r '.numTotalTests // 0' reports/test-results.json)
             STATUS="${PASSED} passed · ${FAILED} failed (${TOTAL} total)"
+            PRODUCT_SUMMARY=$(jq -r '
+              def product_from_path($path):
+                if ($path | test("/products/coalition/")) then "Coalition"
+                elif ($path | test("/products/viz/")) then "Viz"
+                elif ($path | test("/products/ahp/")) then "AHP"
+                elif ($path | test("/products/ppl/")) then "PPL"
+                elif ($path | test("/products/cyber/")) then "Cyber"
+                elif ($path | test("/auth/")) then "Auth"
+                else "Other"
+                end;
+
+              [.testResults[] |
+                .name as $path |
+                product_from_path($path) as $product |
+                .assertionResults[] | {product: $product, status: .status}
+              ] | group_by(.product) | sort_by(.[0].product) | map(
+                .[0].product as $product |
+                (map(select(.status == "passed")) | length) as $passed |
+                (map(select(.status == "failed")) | length) as $failed |
+                "*\($product):* \($passed) passed · \($failed) failed"
+              ) | join("\n")
+            ' reports/test-results.json)
             if [ "$FAILED" -gt 0 ]; then
               COLOR="#e01e5a"
             elif [ "$TOTAL" -gt 0 ]; then
@@ -79,6 +101,7 @@ jobs:
             FAILED="?"
             TOTAL="?"
             STATUS="Test results unavailable"
+            PRODUCT_SUMMARY="Product breakdown unavailable"
           fi
 
           if [ "$HAS_REPORT" = "true" ]; then
@@ -90,37 +113,50 @@ jobs:
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           TRIGGER="${{ github.event_name }}"
 
-          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
-            -H 'Content-type: application/json' \
-            --data "{
-              \"attachments\": [{
-                \"color\": \"$COLOR\",
-                \"blocks\": [
+          jq -n \
+            --arg color "$COLOR" \
+            --arg status "$STATUS" \
+            --arg product_summary "$PRODUCT_SUMMARY" \
+            --arg run_number "${{ github.run_number }}" \
+            --arg trigger "$TRIGGER" \
+            --arg branch "${{ github.ref_name }}" \
+            --arg run_url "$RUN_URL" \
+            --arg report_note "$REPORT_NOTE" \
+            '{
+              attachments: [{
+                color: $color,
+                blocks: [
                   {
-                    \"type\": \"header\",
-                    \"text\": {
-                      \"type\": \"plain_text\",
-                      \"text\": \"Upcover API Test Report\"
-                    }
+                    type: "header",
+                    text: { type: "plain_text", text: "Upcover API Test Report" }
                   },
                   {
-                    \"type\": \"section\",
-                    \"fields\": [
-                      { \"type\": \"mrkdwn\", \"text\": \"*Result:*\\n$STATUS\" },
-                      { \"type\": \"mrkdwn\", \"text\": \"*Run:*\\n#${{ github.run_number }}\" },
-                      { \"type\": \"mrkdwn\", \"text\": \"*Passed:*\\n$PASSED\" },
-                      { \"type\": \"mrkdwn\", \"text\": \"*Failed:*\\n$FAILED\" },
-                      { \"type\": \"mrkdwn\", \"text\": \"*Trigger:*\\n$TRIGGER\" },
-                      { \"type\": \"mrkdwn\", \"text\": \"*Branch:*\\n${{ github.ref_name }}\" }
+                    type: "section",
+                    fields: [
+                      { type: "mrkdwn", text: ("*Result:*\n" + $status) },
+                      { type: "mrkdwn", text: ("*Run:*\n#" + $run_number) }
                     ]
                   },
                   {
-                    \"type\": \"section\",
-                    \"text\": {
-                      \"type\": \"mrkdwn\",
-                      \"text\": \"<$RUN_URL|View run on GitHub Actions>\\n$REPORT_NOTE\"
+                    type: "section",
+                    text: { type: "mrkdwn", text: $product_summary }
+                  },
+                  {
+                    type: "section",
+                    fields: [
+                      { type: "mrkdwn", text: ("*Trigger:*\n" + $trigger) },
+                      { type: "mrkdwn", text: ("*Branch:*\n" + $branch) }
+                    ]
+                  },
+                  {
+                    type: "section",
+                    text: {
+                      type: "mrkdwn",
+                      text: ("<" + $run_url + "|View run on GitHub Actions>\n" + $report_note)
                     }
                   }
                 ]
               }]
-            }"
+            }' | curl -sf -X POST "$SLACK_WEBHOOK_URL" \
+            -H 'Content-type: application/json' \
+            --data @-
