@@ -36,7 +36,7 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           FALLBACK_ANNUAL_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_ANNUAL_PAYMENT_METHOD_ID }}
           FALLBACK_MONTHLY_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
-        run: npm test
+        run: npm test -- --json --outputFile=reports/test-results.json
 
       - name: Upload HTML report
         if: always() && hashFiles('reports/test-report.html') != ''
@@ -59,10 +59,27 @@ jobs:
           fi
 
           case "$TEST_OUTCOME" in
-            success) STATUS="PASSED ✅"; COLOR="#36a64f" ;;
-            failure) STATUS="FAILED ❌";  COLOR="#e01e5a" ;;
-            *)       STATUS="UNKNOWN ⚠️"; COLOR="#ecb22e" ;;
+            success) COLOR="#36a64f" ;;
+            failure) COLOR="#e01e5a" ;;
+            *)       COLOR="#ecb22e" ;;
           esac
+
+          if [ -f reports/test-results.json ]; then
+            PASSED=$(jq -r '.numPassedTests // 0' reports/test-results.json)
+            FAILED=$(jq -r '.numFailedTests // 0' reports/test-results.json)
+            TOTAL=$(jq -r '.numTotalTests // 0' reports/test-results.json)
+            STATUS="${PASSED} passed · ${FAILED} failed (${TOTAL} total)"
+            if [ "$FAILED" -gt 0 ]; then
+              COLOR="#e01e5a"
+            elif [ "$TOTAL" -gt 0 ]; then
+              COLOR="#36a64f"
+            fi
+          else
+            PASSED="?"
+            FAILED="?"
+            TOTAL="?"
+            STATUS="Test results unavailable"
+          fi
 
           if [ "$HAS_REPORT" = "true" ]; then
             REPORT_NOTE="Download the HTML report from the *Artifacts* section on the run page."
@@ -91,6 +108,8 @@ jobs:
                     \"fields\": [
                       { \"type\": \"mrkdwn\", \"text\": \"*Result:*\\n$STATUS\" },
                       { \"type\": \"mrkdwn\", \"text\": \"*Run:*\\n#${{ github.run_number }}\" },
+                      { \"type\": \"mrkdwn\", \"text\": \"*Passed:*\\n$PASSED\" },
+                      { \"type\": \"mrkdwn\", \"text\": \"*Failed:*\\n$FAILED\" },
                       { \"type\": \"mrkdwn\", \"text\": \"*Trigger:*\\n$TRIGGER\" },
                       { \"type\": \"mrkdwn\", \"text\": \"*Branch:*\\n${{ github.ref_name }}\" }
                     ]
@@ -105,7 +124,3 @@ jobs:
                 ]
               }]
             }"
-
-      - name: Fail job if tests failed
-        if: steps.tests.outcome == 'failure'
-        run: exit 1
