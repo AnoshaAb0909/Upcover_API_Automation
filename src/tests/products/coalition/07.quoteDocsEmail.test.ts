@@ -1,5 +1,10 @@
+import { buildAnnualQuickQuotePayload } from '../../../products/coalition/data/annualQuickQuote.template';
+import { COALITION_NOTIFICATION_EMAIL } from '../../../products/coalition/data/coalitionNotificationEmail';
+import {
+  buildAnnualFullQuotePayload,
+  buildMonthlyFullQuotePayload,
+} from '../../../products/coalition/data/fullQuote.payload';
 import { buildQuoteDocsEmailPayload } from '../../../products/coalition/data/quoteDocsEmail.payload';
-import { buildFullQuotePayload, buildMonthlyFullQuotePayload } from '../../../products/coalition/data/fullQuote.payload';
 import { buildQuickQuotePayload } from '../../../products/coalition/data/quickQuote.payload';
 import { createFullQuote } from '../../../products/coalition/services/fullQuote.service';
 import { emailQuoteDocs } from '../../../products/coalition/services/quoteDocsEmail.service';
@@ -8,10 +13,11 @@ import type { FullQuoteResponse } from '../../../products/coalition/types/fullQu
 import type { QuickQuoteResponse } from '../../../products/coalition/types/quickQuote.types';
 import { expectApiStatus } from '../../helpers/expectApiStatus';
 
-async function runQuoteDocsEmailFlow(
-  buildFullQuote: (quickQuote: QuickQuoteResponse) => ReturnType<typeof buildFullQuotePayload>,
+async function runCoalitionQuoteDocsEmailFlow(
+  buildQuickQuote: () => ReturnType<typeof buildQuickQuotePayload>,
+  buildFullQuote: (quickQuote: QuickQuoteResponse) => ReturnType<typeof buildMonthlyFullQuotePayload>,
 ): Promise<void> {
-  const quickQuoteResponse = await createQuickQuoteWithRetry(buildQuickQuotePayload);
+  const quickQuoteResponse = await createQuickQuoteWithRetry(buildQuickQuote);
 
   expectApiStatus(quickQuoteResponse, 201);
 
@@ -24,21 +30,22 @@ async function runQuoteDocsEmailFlow(
   const emailPayload = buildQuoteDocsEmailPayload(fullQuote);
 
   expect(emailPayload.quoteId).toBe(fullQuote.fullQuote.id);
-  expect(emailPayload.email).toBe(fullQuote.fullQuote.req.clientInformation.email);
+  expect(emailPayload.email).toBe(COALITION_NOTIFICATION_EMAIL);
 
   const emailResponse = await emailQuoteDocs(emailPayload);
 
   expect(emailResponse.status).not.toBe(400);
   expect(emailResponse.status).not.toBe(401);
-  expectApiStatus(emailResponse, 200);
+  expectApiStatus(emailResponse, 201);
 }
 
 describe('Coalition Quote Docs Email API', () => {
   it(
     'should email quote docs for annual full quote',
     async () => {
-      await runQuoteDocsEmailFlow((quickQuote) =>
-        buildFullQuotePayload(quickQuote, { isMonthlySubscription: false }),
+      await runCoalitionQuoteDocsEmailFlow(
+        buildAnnualQuickQuotePayload,
+        buildAnnualFullQuotePayload,
       );
     },
     300000,
@@ -47,7 +54,10 @@ describe('Coalition Quote Docs Email API', () => {
   it(
     'should email quote docs for monthly full quote',
     async () => {
-      await runQuoteDocsEmailFlow(buildMonthlyFullQuotePayload);
+      await runCoalitionQuoteDocsEmailFlow(
+        buildQuickQuotePayload,
+        buildMonthlyFullQuotePayload,
+      );
     },
     300000,
   );

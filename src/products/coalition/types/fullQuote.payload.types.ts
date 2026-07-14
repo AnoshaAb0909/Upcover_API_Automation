@@ -75,5 +75,6 @@ export interface FullQuotePayload {
   occupation: string;
   metadata: {
     quoteId: string;
+    viewType?: string;
   };
 }

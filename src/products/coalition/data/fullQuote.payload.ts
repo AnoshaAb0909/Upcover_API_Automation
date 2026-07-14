@@ -1,3 +1,4 @@
+import { buildAnnualFullQuoteOverrides } from './annualFullQuote.template';
 import { mapQuickQuoteResponseToFullQuotePayload } from './fullQuote.mapper';
 import type { FullQuotePayload } from '../types/fullQuote.payload.types';
 import type { QuickQuoteResponse } from '../types/quickQuote.types';
@@ -24,5 +25,36 @@ export function buildMonthlyFullQuotePayload(
   return mapQuickQuoteResponseToFullQuotePayload(quickQuote, {
     isMonthlySubscription: true,
     overrides,
+  });
+}
+
+export function buildAnnualFullQuotePayload(
+  quickQuote: QuickQuoteResponse,
+  overrides: Partial<FullQuotePayload> = {},
+): FullQuotePayload {
+  const annualOverrides = buildAnnualFullQuoteOverrides(quickQuote);
+
+  return mapQuickQuoteResponseToFullQuotePayload(quickQuote, {
+    isMonthlySubscription: false,
+    overrides: {
+      ...annualOverrides,
+      ...overrides,
+      clientInformation: {
+        ...annualOverrides.clientInformation,
+        ...overrides.clientInformation,
+        address: {
+          ...annualOverrides.clientInformation?.address,
+          ...overrides.clientInformation?.address,
+        },
+      },
+      declarations: {
+        ...annualOverrides.declarations,
+        ...overrides.declarations,
+      },
+      metadata: {
+        ...annualOverrides.metadata,
+        ...overrides.metadata,
+      },
+    },
   });
 }

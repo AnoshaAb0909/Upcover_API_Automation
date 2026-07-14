@@ -1,14 +1,11 @@
 import type { VizQuoteDocsEmailPayload } from '../types/quoteDocsEmail.payload.types';
 import type { VizFullQuoteResponse } from '../types/fullQuote.types';
+import { VIZ_NOTIFICATION_EMAIL } from './vizNotificationEmail';
 
-export function resolveVizQuoteDocsEmail(fullQuote: VizFullQuoteResponse): string {
-  const email = fullQuote.fullQuote.req.clientInformation.email;
+export const QUOTE_DOCS_EMAIL = VIZ_NOTIFICATION_EMAIL;
 
-  if (!email) {
-    throw new Error('Full quote response is missing req.clientInformation.email');
-  }
-
-  return email;
+export function resolveVizQuoteDocsEmail(_fullQuote: VizFullQuoteResponse): string {
+  return QUOTE_DOCS_EMAIL;
 }
 
 export function resolveVizQuoteDocsQuoteId(fullQuote: VizFullQuoteResponse): string {

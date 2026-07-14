@@ -1,3 +1,4 @@
+import { resolveSharedPaymentMethodId } from '../../../core/payments';
 import {
   mapFullQuoteResponseToAnnualPaymentPayload,
   mapFullQuoteResponseToMonthlyPaymentPayload,
@@ -27,6 +28,26 @@ export function buildMonthlyPaymentPayload(
   overrides: Partial<MonthlyPaymentPayload> = {},
 ): MonthlyPaymentPayload {
   return mapFullQuoteResponseToMonthlyPaymentPayload(fullQuote, overrides);
+}
+
+export async function buildAnnualPaymentPayloadFromFullQuote(
+  fullQuote: FullQuoteResponse,
+  overrides: Partial<AnnualPaymentPayload> = {},
+): Promise<AnnualPaymentPayload> {
+  const email = fullQuote.fullQuote.req.clientInformation.email;
+  const paymentMethodId = await resolveSharedPaymentMethodId(email, 'annual');
+
+  return buildAnnualPaymentPayload(fullQuote, { paymentMethodId, ...overrides });
+}
+
+export async function buildMonthlyPaymentPayloadFromFullQuote(
+  fullQuote: FullQuoteResponse,
+  overrides: Partial<MonthlyPaymentPayload> = {},
+): Promise<MonthlyPaymentPayload> {
+  const email = fullQuote.fullQuote.req.clientInformation.email;
+  const paymentMethodId = await resolveSharedPaymentMethodId(email, 'monthly');
+
+  return buildMonthlyPaymentPayload(fullQuote, { paymentMethodId, ...overrides });
 }
 
 /** @deprecated Use buildAnnualPaymentPayload */

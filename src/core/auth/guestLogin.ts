@@ -37,6 +37,11 @@ export async function ensureGuestAuth(): Promise<string> {
   return body.accessToken;
 }
 
+export async function refreshGuestAuth(): Promise<string> {
+  clearAccessToken();
+  return ensureGuestAuth();
+}
+
 export async function getGuestToken(): Promise<string> {
   return ensureGuestAuth();
 }

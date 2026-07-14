@@ -1,17 +1,14 @@
 import type { VizProofOfInsuranceEmailPayload } from '../types/proofOfInsuranceEmail.payload.types';
 import type { VizFullQuoteResponse } from '../types/fullQuote.types';
 import type { VizPaymentResponse } from '../types/payment.types';
+import { VIZ_NOTIFICATION_EMAIL } from './vizNotificationEmail';
+
+export const PROOF_OF_INSURANCE_EMAIL = VIZ_NOTIFICATION_EMAIL;
 
 export function resolveVizProofOfInsuranceEmail(
-  fullQuote: VizFullQuoteResponse,
+  _fullQuote: VizFullQuoteResponse,
 ): string {
-  const email = fullQuote.fullQuote.req.clientInformation.email;
-
-  if (!email) {
-    throw new Error('Full quote response is missing req.clientInformation.email');
-  }
-
-  return email;
+  return PROOF_OF_INSURANCE_EMAIL;
 }
 
 export function resolveVizProofOfInsurancePolicyRequestId(

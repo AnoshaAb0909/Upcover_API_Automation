@@ -1,14 +1,11 @@
 import type { QuoteDocsEmailPayload } from '../types/quoteDocsEmail.payload.types';
 import type { FullQuoteResponse } from '../types/fullQuote.types';
+import { COALITION_NOTIFICATION_EMAIL } from './coalitionNotificationEmail';
 
-export function resolveQuoteDocsEmail(fullQuote: FullQuoteResponse): string {
-  const email = fullQuote.fullQuote.req.clientInformation.email;
+export const QUOTE_DOCS_EMAIL = COALITION_NOTIFICATION_EMAIL;
 
-  if (!email) {
-    throw new Error('Full quote response is missing req.clientInformation.email');
-  }
-
-  return email;
+export function resolveQuoteDocsEmail(_fullQuote: FullQuoteResponse): string {
+  return QUOTE_DOCS_EMAIL;
 }
 
 export function resolveQuoteDocsQuoteId(fullQuote: FullQuoteResponse): string {

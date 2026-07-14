@@ -1,3 +1,4 @@
+import { resolveSharedPaymentMethodId } from '../../../core/payments';
 import {
   mapVizFullQuoteResponseToAnnualPaymentPayload,
   mapVizFullQuoteResponseToMonthlyPaymentPayload,
@@ -28,4 +29,24 @@ export function buildVizMonthlyPaymentPayload(
   overrides: Partial<VizMonthlyPaymentPayload> = {},
 ): VizMonthlyPaymentPayload {
   return mapVizFullQuoteResponseToMonthlyPaymentPayload(fullQuote, overrides);
+}
+
+export async function buildVizAnnualPaymentPayloadFromFullQuote(
+  fullQuote: VizFullQuoteResponse,
+  overrides: Partial<VizAnnualPaymentPayload> = {},
+): Promise<VizAnnualPaymentPayload> {
+  const email = fullQuote.fullQuote.req.clientInformation.email;
+  const paymentMethodId = await resolveSharedPaymentMethodId(email, 'annual');
+
+  return buildVizAnnualPaymentPayload(fullQuote, { paymentMethodId, ...overrides });
+}
+
+export async function buildVizMonthlyPaymentPayloadFromFullQuote(
+  fullQuote: VizFullQuoteResponse,
+  overrides: Partial<VizMonthlyPaymentPayload> = {},
+): Promise<VizMonthlyPaymentPayload> {
+  const email = fullQuote.fullQuote.req.clientInformation.email;
+  const paymentMethodId = await resolveSharedPaymentMethodId(email, 'monthly');
+
+  return buildVizMonthlyPaymentPayload(fullQuote, { paymentMethodId, ...overrides });
 }

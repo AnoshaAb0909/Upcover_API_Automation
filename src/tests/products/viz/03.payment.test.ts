@@ -1,5 +1,5 @@
 import { buildVizFullQuotePayload } from '../../../products/viz/data/fullQuote.payload';
-import { buildVizAnnualPaymentPayload } from '../../../products/viz/data/payment.payload';
+import { buildVizAnnualPaymentPayloadFromFullQuote } from '../../../products/viz/data/payment.payload';
 import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
 import { createVizFullQuote } from '../../../products/viz/services/fullQuote.service';
 import { createVizAnnualPayment } from '../../../products/viz/services/payment.service';
@@ -27,12 +27,12 @@ describe('Viz Annual Payment API', () => {
 
       const fullQuote = fullQuoteResponse.body as VizFullQuoteResponse;
       const clientPayable = fullQuote.fullQuote.priceBreakdown.clientPayable;
-      const paymentPayload = buildVizAnnualPaymentPayload(fullQuote);
+      const paymentPayload = await buildVizAnnualPaymentPayloadFromFullQuote(fullQuote);
 
       expect(paymentPayload.quoteId).toBe(fullQuote.fullQuote.id);
       expect(paymentPayload.expectedPrice).toBe(clientPayable);
       expect(fullQuote.fullQuote.isMonthlySubscription).toBe(false);
-      expect(paymentPayload.paymentMethodId).toBeTruthy();
+      expect(paymentPayload.paymentMethodId).toMatch(/^pm_/);
       expect(paymentPayload).not.toHaveProperty('couponId');
       expect(paymentPayload).not.toHaveProperty('isCouponApplied');
 
@@ -47,7 +47,7 @@ describe('Viz Annual Payment API', () => {
       ) {
         console.warn(
           'Viz annual payment mapping succeeded, but Stripe customer is missing on this environment. ' +
-            'Set VIZ_PAYMENT_METHOD_ID in .env to a valid payment method.',
+            'Ensure the client email exists in Stripe or set STRIPE_SECRET_KEY_ANNUAL / FALLBACK_ANNUAL_PAYMENT_METHOD_ID.',
         );
         return;
       }

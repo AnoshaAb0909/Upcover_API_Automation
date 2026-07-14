@@ -3,10 +3,11 @@ import {
   buildVizMonthlyFullQuotePayload,
 } from '../../../products/viz/data/fullQuote.payload';
 import {
-  buildVizAnnualPaymentPayload,
-  buildVizMonthlyPaymentPayload,
+  buildVizAnnualPaymentPayloadFromFullQuote,
+  buildVizMonthlyPaymentPayloadFromFullQuote,
 } from '../../../products/viz/data/payment.payload';
 import { buildVizProofOfInsuranceEmailPayload } from '../../../products/viz/data/proofOfInsuranceEmail.payload';
+import { VIZ_NOTIFICATION_EMAIL } from '../../../products/viz/data/vizNotificationEmail';
 import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
 import { createVizFullQuote } from '../../../products/viz/services/fullQuote.service';
 import {
@@ -33,7 +34,9 @@ async function runVizProofOfInsuranceEmailFlow(
   ) => ReturnType<typeof buildVizFullQuotePayload>,
   createPayment: (
     fullQuote: VizFullQuoteResponse,
-  ) => ReturnType<typeof createVizAnnualPayment>,
+  ) =>
+    | ReturnType<typeof createVizAnnualPayment>
+    | Promise<ReturnType<typeof createVizAnnualPayment>>,
 ): Promise<void> {
   const quickQuoteResponse = await createVizQuickQuoteWithRetry(
     buildVizQuickQuotePayload,
@@ -64,7 +67,7 @@ async function runVizProofOfInsuranceEmailFlow(
   const payment = paymentResponse.body as VizPaymentResponse;
   const emailPayload = buildVizProofOfInsuranceEmailPayload(fullQuote, payment);
 
-  expect(emailPayload.email).toBe(fullQuote.fullQuote.req.clientInformation.email);
+  expect(emailPayload.email).toBe(VIZ_NOTIFICATION_EMAIL);
   expect(emailPayload.policyRequestId).toBe(payment.id);
 
   const emailResponse = await emailVizProofOfInsurance(emailPayload);
@@ -80,7 +83,8 @@ describe('Viz Proof of Insurance Email API', () => {
     async () => {
       await runVizProofOfInsuranceEmailFlow(
         (quickQuote) => buildVizFullQuotePayload(quickQuote),
-        (fullQuote) => createVizAnnualPayment(buildVizAnnualPaymentPayload(fullQuote)),
+        async (fullQuote) =>
+          createVizAnnualPayment(await buildVizAnnualPaymentPayloadFromFullQuote(fullQuote)),
       );
     },
     300000,
@@ -91,8 +95,10 @@ describe('Viz Proof of Insurance Email API', () => {
     async () => {
       await runVizProofOfInsuranceEmailFlow(
         buildVizMonthlyFullQuotePayload,
-        (fullQuote) =>
-          createVizMonthlyPayment(buildVizMonthlyPaymentPayload(fullQuote)),
+        async (fullQuote) =>
+          createVizMonthlyPayment(
+            await buildVizMonthlyPaymentPayloadFromFullQuote(fullQuote),
+          ),
       );
     },
     300000,

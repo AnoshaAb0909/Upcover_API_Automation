@@ -8,7 +8,7 @@
     "test:auth": "jest --testPathPatterns=tests/auth",
     "test:coalition": "jest --testPathPatterns=products/coalition --runInBand --testSequencer=./src/tests/coalitionTestSequencer.js",
     "test:ahp": "jest --testPathPatterns=products/ahp",
-    "test:viz": "jest --testPathPatterns=products/viz --runInBand",
+    "test:viz": "jest --testPathPatterns=products/viz --runInBand --testSequencer=./src/tests/vizTestSequencer.js",
     "test:report": "jest && open reports/test-report.html"
   },
   "keywords": [
@@ -21,6 +21,7 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.7",
+    "stripe": "^22.3.1",
     "supertest": "^7.1.0"
   },
   "devDependencies": {

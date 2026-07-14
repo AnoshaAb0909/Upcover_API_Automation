@@ -1,5 +1,6 @@
 import { apiClient } from '../../../core/client/apiClient';
 import { env } from '../../../core/config/env';
+import { coalitionTestCompanies } from '../data/coalitionTestCompanies';
 import { buildQuickQuotePayload } from '../data/quickQuote.payload';
 import type { QuickQuotePayload } from '../types/quickQuote.payload.types';
 import type { Response } from 'supertest';
@@ -33,7 +34,8 @@ export async function createQuickQuoteWithRetry(
   buildPayload: () => QuickQuotePayload = buildQuickQuotePayload,
   options: { maxAttempts?: number; retryDelayMs?: number } = {},
 ): Promise<Response> {
-  const maxAttempts = options.maxAttempts ?? 12;
+  const maxAttempts =
+    options.maxAttempts ?? coalitionTestCompanies.length + 2;
   const retryDelayMs = options.retryDelayMs ?? 15000;
   let payload = buildPayload();
   let response = await createQuickQuote(payload);

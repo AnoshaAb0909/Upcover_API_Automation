@@ -1,9 +1,9 @@
 import { env } from '../../../core/config/env';
 
 export const defaultVizAnnualPaymentOptions = {
-  paymentMethodId: env.vizPaymentMethodId,
+  paymentMethodId: env.fallbackAnnualPaymentMethodId,
 };
 
 export const defaultVizMonthlyPaymentOptions = {
-  paymentMethodId: env.vizMonthlyPaymentMethodId,
+  paymentMethodId: env.fallbackMonthlyPaymentMethodId,
 };

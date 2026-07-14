@@ -1,5 +1,5 @@
 import {
-  buildFullQuotePayload,
+  buildMonthlyFullQuotePayload,
   resolveQuickQuoteId,
 } from '../../../products/coalition/data/fullQuote.payload';
 import { buildQuickQuotePayload } from '../../../products/coalition/data/quickQuote.payload';
@@ -9,9 +9,9 @@ import type { FullQuoteResponse } from '../../../products/coalition/types/fullQu
 import type { QuickQuoteResponse } from '../../../products/coalition/types/quickQuote.types';
 import { expectApiStatus } from '../../helpers/expectApiStatus';
 
-describe('Coalition Full Quote API', () => {
+describe('Coalition Monthly Full Quote API', () => {
   it(
-    'should create full quote using quoteId mapped from quick quote response',
+    'should create monthly full quote using quoteId mapped from quick quote response',
     async () => {
       let quickQuoteRequest = buildQuickQuotePayload();
       const quickQuoteResponse = await createQuickQuoteWithRetry(() => {
@@ -25,10 +25,11 @@ describe('Coalition Full Quote API', () => {
       const quoteId = resolveQuickQuoteId(quickQuote);
       expect(quoteId).toBeTruthy();
 
-      const fullQuotePayload = buildFullQuotePayload(quickQuote);
+      const fullQuotePayload = buildMonthlyFullQuotePayload(quickQuote);
 
       expect(fullQuotePayload.quoteId).toBe(quoteId);
       expect(fullQuotePayload.metadata.quoteId).toBe(quoteId);
+      expect(fullQuotePayload.isMonthlySubscription).toBe(true);
       expect(fullQuotePayload.companyRevenue).toBe(quickQuoteRequest.companyRevenue);
       expect(fullQuotePayload.companyName).toBe(quickQuoteRequest.companyName);
       expect(fullQuotePayload.aggregateLimit).toBe(quickQuoteRequest.aggregateLimit);
@@ -41,6 +42,10 @@ describe('Coalition Full Quote API', () => {
       expect(fullQuote.fullQuote).toHaveProperty('id');
       expect(fullQuote.fullQuote.id).toBeTruthy();
       expect(typeof fullQuote.fullQuote.id).toBe('string');
+      expect(fullQuote.fullQuote.isMonthlySubscription).toBe(true);
+      expect(
+        fullQuote.fullQuote.monthlyPriceBreakdown.monthlyBreakdown?.firstInstallmentPayable,
+      ).toBeTruthy();
     },
     240000,
   );

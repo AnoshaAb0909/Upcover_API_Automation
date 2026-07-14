@@ -1,4 +1,5 @@
 import { buildVizQuoteDocsEmailPayload } from '../../../products/viz/data/quoteDocsEmail.payload';
+import { VIZ_NOTIFICATION_EMAIL } from '../../../products/viz/data/vizNotificationEmail';
 import {
   buildVizFullQuotePayload,
   buildVizMonthlyFullQuotePayload,
@@ -31,7 +32,7 @@ async function runVizQuoteDocsEmailFlow(
   const emailPayload = buildVizQuoteDocsEmailPayload(fullQuote);
 
   expect(emailPayload.quoteId).toBe(fullQuote.fullQuote.id);
-  expect(emailPayload.email).toBe(fullQuote.fullQuote.req.clientInformation.email);
+  expect(emailPayload.email).toBe(VIZ_NOTIFICATION_EMAIL);
 
   const emailResponse = await emailVizQuoteDocs(emailPayload);
 

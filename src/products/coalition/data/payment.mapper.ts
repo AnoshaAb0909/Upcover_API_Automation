@@ -20,6 +20,19 @@ function resolveClientPayable(fullQuote: FullQuoteResponse): number {
   return clientPayable;
 }
 
+function resolveFirstInstallmentPayable(fullQuote: FullQuoteResponse): number {
+  const firstInstallmentPayable =
+    fullQuote.fullQuote.monthlyPriceBreakdown.monthlyBreakdown?.firstInstallmentPayable;
+
+  if (firstInstallmentPayable === undefined) {
+    throw new Error(
+      'Full quote response is missing monthlyPriceBreakdown.monthlyBreakdown.firstInstallmentPayable',
+    );
+  }
+
+  return firstInstallmentPayable;
+}
+
 export function resolveFullQuoteId(fullQuote: FullQuoteResponse): string {
   return fullQuote.fullQuote.id;
 }
@@ -34,8 +47,6 @@ export function mapFullQuoteResponseToAnnualPaymentPayload(
     quoteId,
     paymentMethodId: defaultAnnualPaymentOptions.paymentMethodId,
     expectedPrice: resolveClientPayable(fullQuote),
-    couponId: defaultAnnualPaymentOptions.couponId,
-    isCouponApplied: defaultAnnualPaymentOptions.isCouponApplied,
     ...overrides,
   };
 }
@@ -49,7 +60,7 @@ export function mapFullQuoteResponseToMonthlyPaymentPayload(
   return {
     quoteId,
     paymentMethodId: defaultMonthlyPaymentOptions.paymentMethodId,
-    expectedPrice: resolveClientPayable(fullQuote),
+    expectedPrice: resolveFirstInstallmentPayable(fullQuote),
     ...overrides,
   };
 }

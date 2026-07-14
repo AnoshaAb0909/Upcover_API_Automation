@@ -1,15 +1,12 @@
 import type { ProofOfInsuranceEmailPayload } from '../types/proofOfInsuranceEmail.payload.types';
 import type { FullQuoteResponse } from '../types/fullQuote.types';
 import type { PaymentResponse } from '../types/payment.types';
+import { COALITION_NOTIFICATION_EMAIL } from './coalitionNotificationEmail';
 
-export function resolveProofOfInsuranceEmail(fullQuote: FullQuoteResponse): string {
-  const email = fullQuote.fullQuote.req.clientInformation.email;
+export const PROOF_OF_INSURANCE_EMAIL = COALITION_NOTIFICATION_EMAIL;
 
-  if (!email) {
-    throw new Error('Full quote response is missing req.clientInformation.email');
-  }
-
-  return email;
+export function resolveProofOfInsuranceEmail(_fullQuote: FullQuoteResponse): string {
+  return PROOF_OF_INSURANCE_EMAIL;
 }
 
 export function resolveProofOfInsurancePolicyRequestId(

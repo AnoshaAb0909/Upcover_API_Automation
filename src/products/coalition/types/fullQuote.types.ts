@@ -1,4 +1,5 @@
 import type { FullQuotePayload } from './fullQuote.payload.types';
+import type { MonthlyBreakdown } from './quickQuote.types';
 
 export type { FullQuotePayload };
 
@@ -11,6 +12,7 @@ export interface FullQuoteMonthlyPriceBreakdown {
   brokerFee?: number;
   clientPayable: number;
   paymentGatewayFee?: number;
+  monthlyBreakdown?: MonthlyBreakdown;
   [key: string]: unknown;
 }
 
