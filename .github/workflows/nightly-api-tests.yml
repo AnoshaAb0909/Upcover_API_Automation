@@ -36,7 +36,8 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           FALLBACK_ANNUAL_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_ANNUAL_PAYMENT_METHOD_ID }}
           FALLBACK_MONTHLY_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
-        run: npm test -- --json --outputFile=reports/test-results.json --runInBand
+        # Coalition excluded until dev env issues are resolved — Viz only
+        run: npm run test:ci -- --json --outputFile=reports/test-results.json
 
       - name: Upload HTML report
         if: always() && hashFiles('reports/test-report.html') != ''
@@ -91,6 +92,7 @@ jobs:
                 "*\($product):* \($passed) passed · \($failed) failed"
               ) | join("\n")
             ' reports/test-results.json)
+            PRODUCT_SUMMARY="${PRODUCT_SUMMARY}"$'\n'"*Coalition:* skipped (dev env issue)"
             if [ "$FAILED" -gt 0 ]; then
               COLOR="#e01e5a"
             elif [ "$TOTAL" -gt 0 ]; then
