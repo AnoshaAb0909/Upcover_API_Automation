@@ -17,7 +17,6 @@ import {
 import { emailVizProofOfInsurance } from '../../../products/viz/services/proofOfInsuranceEmail.service';
 import { createVizQuickQuoteWithRetry } from '../../../products/viz/services/quickQuote.service';
 import type { VizFullQuoteResponse } from '../../../products/viz/types/fullQuote.types';
-import type { VizPaymentResponse } from '../../../products/viz/types/payment.types';
 import type { VizQuickQuoteResponse } from '../../../products/viz/types/quickQuote.types';
 import { expectApiStatus } from '../../helpers/expectApiStatus';
 
@@ -64,17 +63,16 @@ async function runVizProofOfInsuranceEmailFlow(
 
   expectApiStatus(paymentResponse, 201);
 
-  const payment = paymentResponse.body as VizPaymentResponse;
-  const emailPayload = buildVizProofOfInsuranceEmailPayload(fullQuote, payment);
+  const emailPayload = buildVizProofOfInsuranceEmailPayload(fullQuote);
 
   expect(emailPayload.email).toBe(VIZ_NOTIFICATION_EMAIL);
-  expect(emailPayload.policyRequestId).toBe(payment.id);
+  expect(emailPayload.policyRequestId).toBe(fullQuote.fullQuote.id);
 
   const emailResponse = await emailVizProofOfInsurance(emailPayload);
 
   expect(emailResponse.status).not.toBe(400);
   expect(emailResponse.status).not.toBe(401);
-  expectApiStatus(emailResponse, 200);
+  expectApiStatus(emailResponse, 201);
 }
 
 describe('Viz Proof of Insurance Email API', () => {
