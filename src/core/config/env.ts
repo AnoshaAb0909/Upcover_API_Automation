@@ -2,8 +2,13 @@ import dotenv from 'dotenv';
 
 dotenv.config({ quiet: true });
 
+function readEnv(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed || undefined;
+}
+
 function requireEnv(name: string, fallback?: string): string {
-  const value = process.env[name] ?? fallback;
+  const value = readEnv(process.env[name]) ?? fallback;
   if (!value) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
@@ -14,19 +19,19 @@ export const env = {
   baseUrl: requireEnv('BASE_URL', 'https://dev-api.upcover.com'),
   timeout: Number(process.env.REQUEST_TIMEOUT ?? 30000),
   guestEmail: process.env.GUEST_EMAIL ?? 'qa-automation@upcover.com',
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY,
-  stripeSecretKeyAnnual: process.env.STRIPE_SECRET_KEY_ANNUAL,
-  stripeSecretKeyMonthly: process.env.STRIPE_SECRET_KEY_MONTHLY,
+  stripeSecretKey: readEnv(process.env.STRIPE_SECRET_KEY),
+  stripeSecretKeyAnnual: readEnv(process.env.STRIPE_SECRET_KEY_ANNUAL),
+  stripeSecretKeyMonthly: readEnv(process.env.STRIPE_SECRET_KEY_MONTHLY),
   /** Shared across Coalition, Viz, and future products when Stripe lookup is unavailable. */
   fallbackAnnualPaymentMethodId:
-    process.env.FALLBACK_ANNUAL_PAYMENT_METHOD_ID ??
-    process.env.COALITION_PAYMENT_METHOD_ID ??
-    process.env.VIZ_PAYMENT_METHOD_ID ??
+    readEnv(process.env.FALLBACK_ANNUAL_PAYMENT_METHOD_ID) ??
+    readEnv(process.env.COALITION_PAYMENT_METHOD_ID) ??
+    readEnv(process.env.VIZ_PAYMENT_METHOD_ID) ??
     'pm_1TrLFzKwx1QF7fRZuPc5xTSf',
   fallbackMonthlyPaymentMethodId:
-    process.env.FALLBACK_MONTHLY_PAYMENT_METHOD_ID ??
-    process.env.COALITION_MONTHLY_PAYMENT_METHOD_ID ??
-    process.env.VIZ_MONTHLY_PAYMENT_METHOD_ID ??
+    readEnv(process.env.FALLBACK_MONTHLY_PAYMENT_METHOD_ID) ??
+    readEnv(process.env.COALITION_MONTHLY_PAYMENT_METHOD_ID) ??
+    readEnv(process.env.VIZ_MONTHLY_PAYMENT_METHOD_ID) ??
     'pm_1TrM5aF2zGZ7yHRLOlccPSVW',
   coalitionQuickQuotePath:
     process.env.COALITION_QUICK_QUOTE_PATH ?? '/coalition/quick-quote',
