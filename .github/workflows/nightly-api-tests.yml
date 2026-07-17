@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -36,6 +36,12 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           FALLBACK_ANNUAL_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_ANNUAL_PAYMENT_METHOD_ID }}
           FALLBACK_MONTHLY_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
+          VIZ_QUICK_QUOTE_PATH: /viz/quick-quote
+          VIZ_FULL_QUOTE_PATH: /viz/full-quote
+          VIZ_PAYMENTS_PATH: /viz/payments
+          VIZ_MONTHLY_PAYMENTS_PATH: /viz/payments/monthly
+          VIZ_QUOTE_DOCS_EMAIL_PATH: /viz/quote-docs/email
+          VIZ_PROOF_OF_INSURANCE_EMAIL_PATH: /viz/proof-of-insurance/email
         # Coalition excluded until dev env issues are resolved — Viz only
         run: npm run test:ci -- --json --outputFile=reports/test-results.json
 

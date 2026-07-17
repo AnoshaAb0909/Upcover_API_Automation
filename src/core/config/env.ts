@@ -44,7 +44,7 @@ export const env = {
     '/coalition/proof-of-insurance/email',
   quoteDocsTimeout: Number(process.env.QUOTE_DOCS_TIMEOUT ?? 120000),
   vizQuickQuotePath:
-    process.env.VIZ_QUICK_QUOTE_PATH ?? '/viz/reports',
+    process.env.VIZ_QUICK_QUOTE_PATH ?? '/viz/quick-quote',
   vizFullQuotePath:
     process.env.VIZ_FULL_QUOTE_PATH ?? '/viz/full-quote',
   vizPaymentsPath: process.env.VIZ_PAYMENTS_PATH ?? '/viz/payments',
