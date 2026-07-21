@@ -1,5 +1,6 @@
 import { resolveSharedPaymentMethodId } from '../../../core/payments';
 import type {
+  VizEndorsementAnnualPaymentPayload,
   VizEndorsementMonthlyPaymentPayload,
   VizEndorsementResponse,
 } from '../types/endorsement.payload.types';
@@ -57,6 +58,33 @@ export async function buildVizEndorsementMonthlyPaymentPayload(
   const paymentMethodId = await resolveSharedPaymentMethodId(email, 'monthly');
 
   return mapVizEndorsementResponseToMonthlyPaymentPayload(endorsement, {
+    paymentMethodId,
+    ...overrides,
+  });
+}
+
+export function mapVizEndorsementResponseToAnnualPaymentPayload(
+  endorsement: VizEndorsementResponse,
+  overrides: Partial<VizEndorsementAnnualPaymentPayload> = {},
+): VizEndorsementAnnualPaymentPayload {
+  return mapVizEndorsementResponseToMonthlyPaymentPayload(endorsement, overrides);
+}
+
+export async function buildVizEndorsementAnnualPaymentPayload(
+  endorsement: VizEndorsementResponse,
+  overrides: Partial<VizEndorsementAnnualPaymentPayload> = {},
+): Promise<VizEndorsementAnnualPaymentPayload> {
+  const email = endorsement.fullQuote?.req.clientInformation.email;
+
+  if (!email) {
+    throw new Error(
+      'Endorsement response is missing fullQuote.req.clientInformation.email',
+    );
+  }
+
+  const paymentMethodId = await resolveSharedPaymentMethodId(email, 'annual');
+
+  return mapVizEndorsementResponseToAnnualPaymentPayload(endorsement, {
     paymentMethodId,
     ...overrides,
   });

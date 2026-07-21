@@ -1,5 +1,6 @@
 import {
   buildVizFullQuotePayload,
+  buildVizMonthlyFullQuotePayload,
   resolveVizQuickQuoteId,
 } from '../../../products/viz/data/fullQuote.payload';
 import { defaultVizFullQuoteTemplate } from '../../../products/viz/data/fullQuote.defaults';
@@ -52,6 +53,44 @@ describe('Viz Full Quote API', () => {
       expect(fullQuote.fullQuote.id).toBe(quoteId);
       expect(fullQuote.fullQuote.id.startsWith('viz_')).toBe(true);
       expect(fullQuote.fullQuote.priceBreakdown.clientPayable).toBeTruthy();
+    },
+    300000,
+  );
+
+  it(
+    'should create monthly full quote using quoteId mapped from quick quote response',
+    async () => {
+      const quickQuoteResponse = await createVizQuickQuoteWithRetry(
+        buildVizQuickQuotePayload,
+      );
+
+      expectApiStatus(quickQuoteResponse, 201);
+
+      const quickQuote = quickQuoteResponse.body as VizQuickQuoteResponse;
+      const quoteId = resolveVizQuickQuoteId(quickQuote);
+      const fullQuotePayload = buildVizMonthlyFullQuotePayload(quickQuote);
+
+      expect(fullQuotePayload.quoteId).toBe(quoteId);
+      expect(fullQuotePayload.metadata.quoteId).toBe(quoteId);
+      expect(fullQuotePayload.isMonthlySubscription).toBe(true);
+      expect(fullQuotePayload.clientInformation.email).toBe(
+        quickQuote.req.clientInformation.email,
+      );
+      expect(fullQuotePayload.occupations).toEqual(
+        defaultVizFullQuoteTemplate.occupations,
+      );
+
+      const fullQuoteResponse = await createVizFullQuote(fullQuotePayload);
+
+      expectApiStatus(fullQuoteResponse, 201);
+
+      const fullQuote = fullQuoteResponse.body as VizFullQuoteResponse;
+
+      expect(fullQuote.fullQuote.id).toBe(quoteId);
+      expect(fullQuote.fullQuote.isMonthlySubscription).toBe(true);
+      expect(
+        fullQuote.fullQuote.priceBreakdown.monthlyBreakdown?.firstInstallmentPayable,
+      ).toBeTruthy();
     },
     300000,
   );

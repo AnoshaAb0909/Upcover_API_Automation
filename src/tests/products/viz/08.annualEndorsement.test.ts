@@ -1,23 +1,23 @@
-import { buildVizEndorsementMonthlyPaymentPayload } from '../../../products/viz/data/endorsement.payment.payload';
+import { buildVizEndorsementAnnualPaymentPayload } from '../../../products/viz/data/endorsement.payment.payload';
 import {
-  buildVizEndorsementMonthlyFullQuotePayload,
-  buildVizEndorsementMonthlyPayload,
+  buildVizEndorsementAnnualFullQuotePayload,
+  buildVizEndorsementAnnualPayload,
 } from '../../../products/viz/data/endorsement.payload';
 import {
-  vizEndorsementMonthlyAdditionalOccupation,
+  vizEndorsementAnnualAdditionalOccupation,
   vizEndorsementTaxAuditTemplate,
   vizEndorsementToolsTemplate,
 } from '../../../products/viz/data/endorsement.defaults';
-import { vizEndorsementMonthlyFullQuoteTemplate } from '../../../products/viz/data/endorsement.fullQuote.defaults';
+import { vizEndorsementAnnualFullQuoteTemplate } from '../../../products/viz/data/endorsement.fullQuote.defaults';
 import { resolveVizQuickQuoteId } from '../../../products/viz/data/fullQuote.payload';
-import { buildVizMonthlyPaymentPayloadFromFullQuote } from '../../../products/viz/data/payment.payload';
+import { buildVizAnnualPaymentPayloadFromFullQuote } from '../../../products/viz/data/payment.payload';
 import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
 import {
   createVizEndorsement,
-  createVizEndorsementMonthlyPaymentWithApproval,
+  createVizEndorsementAnnualPaymentWithApproval,
 } from '../../../products/viz/services/endorsement.service';
 import { createVizFullQuote } from '../../../products/viz/services/fullQuote.service';
-import { createVizMonthlyPayment } from '../../../products/viz/services/payment.service';
+import { createVizAnnualPayment } from '../../../products/viz/services/payment.service';
 import { createVizQuickQuoteWithRetry } from '../../../products/viz/services/quickQuote.service';
 import type { VizEndorsementPayload } from '../../../products/viz/types/endorsement.payload.types';
 import type { VizEndorsementResponse } from '../../../products/viz/types/endorsement.payload.types';
@@ -32,7 +32,7 @@ function isVizStripeUnavailable(status: number, message: unknown): boolean {
   );
 }
 
-describe('Viz Monthly Endorsement API', () => {
+describe('Viz Annual Endorsement API', () => {
   let quickQuote: VizQuickQuoteResponse;
   let fullQuote: VizFullQuoteResponse;
   let parentQuoteId: string;
@@ -48,44 +48,44 @@ describe('Viz Monthly Endorsement API', () => {
     expectApiStatus(quickQuoteResponse, 201);
     quickQuote = quickQuoteResponse.body as VizQuickQuoteResponse;
 
-    const fullQuotePayload = buildVizEndorsementMonthlyFullQuotePayload(quickQuote);
+    const fullQuotePayload = buildVizEndorsementAnnualFullQuotePayload(quickQuote);
     const fullQuoteResponse = await createVizFullQuote(fullQuotePayload);
 
     expectApiStatus(fullQuoteResponse, 201);
     fullQuote = fullQuoteResponse.body as VizFullQuoteResponse;
     parentQuoteId = fullQuote.fullQuote.id;
 
-    const paymentPayload = await buildVizMonthlyPaymentPayloadFromFullQuote(fullQuote);
-    const paymentResponse = await createVizMonthlyPayment(paymentPayload);
+    const paymentPayload = await buildVizAnnualPaymentPayloadFromFullQuote(fullQuote);
+    const paymentResponse = await createVizAnnualPayment(paymentPayload);
 
     if (isVizStripeUnavailable(paymentResponse.status, paymentResponse.body?.message)) {
       stripeUnavailable = true;
       console.warn(
-        'Viz monthly payment mapping succeeded, but Stripe is unavailable on this environment. ' +
-          'Skipping endorsement because a bound monthly policy is required.',
+        'Viz annual payment mapping succeeded, but Stripe is unavailable on this environment. ' +
+          'Skipping endorsement because a bound annual policy is required.',
       );
       return;
     }
 
     expectApiStatus(paymentResponse, 201);
-    endorsementPayload = buildVizEndorsementMonthlyPayload(fullQuote);
+    endorsementPayload = buildVizEndorsementAnnualPayload(fullQuote);
   }, 300000);
 
-  it('should map monthly endorsement full quote payload from quick quote', () => {
+  it('should map annual endorsement full quote payload from quick quote', () => {
     const quoteId = resolveVizQuickQuoteId(quickQuote);
-    const fullQuotePayload = buildVizEndorsementMonthlyFullQuotePayload(quickQuote);
+    const fullQuotePayload = buildVizEndorsementAnnualFullQuotePayload(quickQuote);
 
     expect(fullQuotePayload.quoteId).toBe(quoteId);
     expect(fullQuotePayload.metadata.quoteId).toBe(quoteId);
     expect(fullQuotePayload.clientInformation).toEqual(quickQuote.req.clientInformation);
-    expect(fullQuotePayload.isMonthlySubscription).toBe(true);
+    expect(fullQuotePayload.isMonthlySubscription).toBe(false);
     expect(fullQuotePayload.companyName).toBe(
-      vizEndorsementMonthlyFullQuoteTemplate.companyName,
+      vizEndorsementAnnualFullQuoteTemplate.companyName,
     );
     expect(fullQuotePayload.companyRevenue).toBe(
-      vizEndorsementMonthlyFullQuoteTemplate.companyRevenue,
+      vizEndorsementAnnualFullQuoteTemplate.companyRevenue,
     );
-    expect(fullQuotePayload.state).toBe('QLD');
+    expect(fullQuotePayload.state).toBe('VIC');
     expect(fullQuotePayload.tools).toEqual({
       include: false,
       items: [],
@@ -97,17 +97,17 @@ describe('Viz Monthly Endorsement API', () => {
     });
   });
 
-  it('should bind a monthly policy before creating an endorsement', () => {
+  it('should bind an annual policy before creating an endorsement', () => {
     if (stripeUnavailable) {
       return;
     }
 
     expect(parentQuoteId).toMatch(/^viz_/);
-    expect(fullQuote.fullQuote.isMonthlySubscription).toBe(true);
+    expect(fullQuote.fullQuote.isMonthlySubscription).toBe(false);
     expect(fullQuote.fullQuote.priceBreakdown.clientPayable).toBeTruthy();
   });
 
-  it('should map monthly endorsement payload from the bound policy', () => {
+  it('should map annual endorsement payload from the bound policy', () => {
     if (stripeUnavailable) {
       return;
     }
@@ -118,19 +118,18 @@ describe('Viz Monthly Endorsement API', () => {
     expect(endorsementPayload.metadata.quoteId).toBe(parentQuoteId);
     expect(endorsementPayload.metadata.flow).toBe('endorsement');
     expect(endorsementPayload.companyName).toBe(req.companyName);
-    expect(endorsementPayload.companyRevenue).toBe(req.companyRevenue);
     expect(endorsementPayload.companyAddress).toEqual(req.companyAddress);
-    expect(endorsementPayload.abnDetails).toEqual(req.abnDetails);
     expect(endorsementPayload.clientInformation).toEqual(req.clientInformation);
     expect(endorsementPayload.occupations).toEqual([
       ...req.occupations,
-      vizEndorsementMonthlyAdditionalOccupation,
+      vizEndorsementAnnualAdditionalOccupation,
     ]);
+    expect(endorsementPayload.isMonthlySubscription).toBe(false);
     expect(endorsementPayload.tools).toEqual(vizEndorsementToolsTemplate);
     expect(endorsementPayload.taxAudit).toEqual(vizEndorsementTaxAuditTemplate);
   });
 
-  it('should create a monthly endorsement full quote', async () => {
+  it('should create an annual endorsement full quote', async () => {
     if (stripeUnavailable) {
       return;
     }
@@ -144,13 +143,13 @@ describe('Viz Monthly Endorsement API', () => {
     expect(endorsement.fullQuote?.priceBreakdown.clientPayable).toBeTruthy();
   });
 
-  it('should pay the monthly endorsement quote', async () => {
+  it('should pay the annual endorsement quote', async () => {
     if (stripeUnavailable) {
       return;
     }
 
     const endorsementPaymentPayload =
-      await buildVizEndorsementMonthlyPaymentPayload(endorsement);
+      await buildVizEndorsementAnnualPaymentPayload(endorsement);
 
     expect(endorsementPaymentPayload.quoteId).toBe(endorsement.fullQuote!.id);
     expect(endorsementPaymentPayload.expectedPrice).toBe(
@@ -158,13 +157,13 @@ describe('Viz Monthly Endorsement API', () => {
     );
     expect(endorsementPaymentPayload.paymentMethodId).toMatch(/^pm_/);
 
-    const endorsementPaymentResponse = await createVizEndorsementMonthlyPaymentWithApproval(
+    const endorsementPaymentResponse = await createVizEndorsementAnnualPaymentWithApproval(
       endorsementPaymentPayload,
     );
 
     if (isVizStripeUnavailable(endorsementPaymentResponse.status, endorsementPaymentResponse.body?.message)) {
       console.warn(
-        'Viz endorsement monthly payment mapping succeeded, but Stripe is unavailable on this environment.',
+        'Viz endorsement annual payment mapping succeeded, but Stripe is unavailable on this environment.',
       );
       return;
     }

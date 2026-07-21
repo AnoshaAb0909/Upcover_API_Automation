@@ -1,7 +1,8 @@
 import {
-  vizEndorsementAdditionalOccupation,
+  resolveVizEndorsementAdditionalOccupation,
   vizEndorsementTaxAuditTemplate,
   vizEndorsementToolsTemplate,
+  type VizEndorsementBillingMode,
 } from './endorsement.defaults';
 import type {
   VizEndorsementOccupation,
@@ -32,23 +33,29 @@ export function resolveVizParentQuoteId(fullQuote: VizFullQuoteResponse): string
 
 function buildEndorsementOccupations(
   reqOccupations: VizEndorsementOccupation[],
+  billingMode: VizEndorsementBillingMode,
 ): VizEndorsementOccupation[] {
-  const additionalOccupationId = vizEndorsementAdditionalOccupation.occupationId;
+  const additionalOccupation = resolveVizEndorsementAdditionalOccupation(billingMode);
   const hasAdditionalOccupation = reqOccupations.some(
-    (occupation) => occupation.occupationId === additionalOccupationId,
+    (occupation) => occupation.occupationId === additionalOccupation.occupationId,
   );
 
   if (hasAdditionalOccupation) {
     return reqOccupations;
   }
 
-  return [...reqOccupations, vizEndorsementAdditionalOccupation];
+  return [...reqOccupations, additionalOccupation];
 }
 
 export function mapVizFullQuoteResponseToEndorsementPayload(
   fullQuote: VizFullQuoteResponse,
-  overrides: Partial<VizEndorsementPayload> = {},
+  options: {
+    billingMode?: VizEndorsementBillingMode;
+    overrides?: Partial<VizEndorsementPayload>;
+  } = {},
 ): VizEndorsementPayload {
+  const billingMode = options.billingMode ?? 'monthly';
+  const overrides = options.overrides ?? {};
   const parentQuoteId = resolveVizParentQuoteId(fullQuote);
   const req = fullQuote.fullQuote.req;
   const policyStartDate = toIsoDateOnly(req.policyStartDate);
@@ -71,7 +78,7 @@ export function mapVizFullQuoteResponseToEndorsementPayload(
     policyStartDate,
     policyExpiryDate,
     endorsementEffectiveDate: policyStartDate,
-    occupations: buildEndorsementOccupations(req.occupations),
+    occupations: buildEndorsementOccupations(req.occupations, billingMode),
     isMonthlySubscription:
       req.isMonthlySubscription ?? fullQuote.fullQuote.isMonthlySubscription ?? false,
     tools: vizEndorsementToolsTemplate,

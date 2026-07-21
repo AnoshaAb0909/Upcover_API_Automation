@@ -60,6 +60,8 @@ export const env = {
   vizEndorsementMonthlyPaymentsPath:
     process.env.VIZ_ENDORSEMENT_MONTHLY_PAYMENTS_PATH ??
     '/viz/payments/endorsement/monthly',
+  vizEndorsementPaymentsPath:
+    process.env.VIZ_ENDORSEMENT_PAYMENTS_PATH ?? '/viz/payments/endorsement',
   vizQuoteDocsEmailPath:
     process.env.VIZ_QUOTE_DOCS_EMAIL_PATH ?? '/viz/quote-docs/email',
   vizProofOfInsuranceEmailPath:

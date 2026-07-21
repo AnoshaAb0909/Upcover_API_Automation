@@ -3,7 +3,7 @@ import {
 } from './fullQuote.mapper';
 import { buildDefaultVizPolicyDates } from './fullQuote.defaults';
 import { mapVizFullQuoteResponseToEndorsementPayload } from './endorsement.mapper';
-import { vizEndorsementMonthlyFullQuoteTemplate } from './endorsement.fullQuote.defaults';
+import { vizEndorsementAnnualFullQuoteTemplate, vizEndorsementMonthlyFullQuoteTemplate } from './endorsement.fullQuote.defaults';
 import type { VizEndorsementPayload } from '../types/endorsement.payload.types';
 import type { VizFullQuotePayload } from '../types/fullQuote.payload.types';
 import type { VizFullQuoteResponse } from '../types/fullQuote.types';
@@ -32,9 +32,48 @@ export function buildVizEndorsementMonthlyFullQuotePayload(
   });
 }
 
+export function buildVizEndorsementAnnualFullQuotePayload(
+  quickQuote: VizQuickQuoteResponse,
+  overrides: Partial<VizFullQuotePayload> = {},
+): VizFullQuotePayload {
+  const { policyStartDate, policyExpiryDate } = buildDefaultVizPolicyDates();
+
+  return mapVizQuickQuoteResponseToFullQuotePayload(quickQuote, {
+    isMonthlySubscription: false,
+    overrides: {
+      ...vizEndorsementAnnualFullQuoteTemplate,
+      policyStartDate,
+      policyExpiryDate,
+      clientInformation: quickQuote.req.clientInformation,
+      ...overrides,
+    },
+  });
+}
+
+export function buildVizEndorsementMonthlyPayload(
+  fullQuote: VizFullQuoteResponse,
+  overrides: Partial<VizEndorsementPayload> = {},
+): VizEndorsementPayload {
+  return mapVizFullQuoteResponseToEndorsementPayload(fullQuote, {
+    billingMode: 'monthly',
+    overrides,
+  });
+}
+
+export function buildVizEndorsementAnnualPayload(
+  fullQuote: VizFullQuoteResponse,
+  overrides: Partial<VizEndorsementPayload> = {},
+): VizEndorsementPayload {
+  return mapVizFullQuoteResponseToEndorsementPayload(fullQuote, {
+    billingMode: 'annual',
+    overrides,
+  });
+}
+
+/** @deprecated Use buildVizEndorsementMonthlyPayload */
 export function buildVizEndorsementPayload(
   fullQuote: VizFullQuoteResponse,
   overrides: Partial<VizEndorsementPayload> = {},
 ): VizEndorsementPayload {
-  return mapVizFullQuoteResponseToEndorsementPayload(fullQuote, overrides);
+  return buildVizEndorsementMonthlyPayload(fullQuote, overrides);
 }

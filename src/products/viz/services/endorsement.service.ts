@@ -2,6 +2,7 @@ import { apiClient } from '../../../core/client/apiClient';
 import { postWithPaymentRetry } from '../../../core/payments/postWithPaymentRetry';
 import { env } from '../../../core/config/env';
 import type {
+  VizEndorsementAnnualPaymentPayload,
   VizEndorsementMonthlyPaymentPayload,
   VizEndorsementPayload,
 } from '../types/endorsement.payload.types';
@@ -45,6 +46,30 @@ export async function createVizEndorsementMonthlyPaymentWithApproval(
   }
 
   return createVizEndorsementMonthlyPayment({
+    ...payload,
+    expectedPrice: approvedPrice,
+  });
+}
+
+export async function createVizEndorsementAnnualPayment(
+  payload: VizEndorsementAnnualPaymentPayload,
+): Promise<Response> {
+  return postWithPaymentRetry('Viz endorsement annual payment', () =>
+    apiClient.post(env.vizEndorsementPaymentsPath).send(payload),
+  );
+}
+
+export async function createVizEndorsementAnnualPaymentWithApproval(
+  payload: VizEndorsementAnnualPaymentPayload,
+): Promise<Response> {
+  let response = await createVizEndorsementAnnualPayment(payload);
+  const approvedPrice = resolveApprovalRequiredExpectedPrice(response);
+
+  if (approvedPrice === undefined) {
+    return response;
+  }
+
+  return createVizEndorsementAnnualPayment({
     ...payload,
     expectedPrice: approvedPrice,
   });

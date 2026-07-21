@@ -9,7 +9,7 @@ on:
 jobs:
   api-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -40,6 +40,9 @@ jobs:
           VIZ_FULL_QUOTE_PATH: /viz/full-quote
           VIZ_PAYMENTS_PATH: /viz/payments
           VIZ_MONTHLY_PAYMENTS_PATH: /viz/payments/monthly
+          VIZ_ENDORSEMENT_PATH: /viz/full-quote/endorsement
+          VIZ_ENDORSEMENT_PAYMENTS_PATH: /viz/payments/endorsement
+          VIZ_ENDORSEMENT_MONTHLY_PAYMENTS_PATH: /viz/payments/endorsement/monthly
           VIZ_QUOTE_DOCS_EMAIL_PATH: /viz/quote-docs/email
           VIZ_PROOF_OF_INSURANCE_EMAIL_PATH: /viz/proof-of-insurance/email
         # Coalition excluded until dev env issues are resolved — Viz only

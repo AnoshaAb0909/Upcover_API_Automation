@@ -30,3 +30,5 @@ export interface VizEndorsementMonthlyPaymentPayload {
   paymentMethodId: string;
   expectedPrice: number;
 }
+
+export type VizEndorsementAnnualPaymentPayload = VizEndorsementMonthlyPaymentPayload;
