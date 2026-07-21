@@ -1,7 +1,7 @@
 const Sequencer = require('@jest/test-sequencer').default;
 
 /**
- * Runs Viz test files in numeric prefix order (01 → 06).
+ * Runs Viz test files in numeric prefix order (01 → 07).
  * Jest's default sequencer does not guarantee this even with --runInBand.
  */
 class VizTestSequencer extends Sequencer {

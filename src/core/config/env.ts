@@ -52,9 +52,14 @@ export const env = {
     process.env.VIZ_QUICK_QUOTE_PATH ?? '/viz/quick-quote',
   vizFullQuotePath:
     process.env.VIZ_FULL_QUOTE_PATH ?? '/viz/full-quote',
+  vizEndorsementPath:
+    process.env.VIZ_ENDORSEMENT_PATH ?? '/viz/full-quote/endorsement',
   vizPaymentsPath: process.env.VIZ_PAYMENTS_PATH ?? '/viz/payments',
   vizMonthlyPaymentsPath:
     process.env.VIZ_MONTHLY_PAYMENTS_PATH ?? '/viz/payments/monthly',
+  vizEndorsementMonthlyPaymentsPath:
+    process.env.VIZ_ENDORSEMENT_MONTHLY_PAYMENTS_PATH ??
+    '/viz/payments/endorsement/monthly',
   vizQuoteDocsEmailPath:
     process.env.VIZ_QUOTE_DOCS_EMAIL_PATH ?? '/viz/quote-docs/email',
   vizProofOfInsuranceEmailPath:

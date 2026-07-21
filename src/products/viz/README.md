@@ -8,6 +8,7 @@ Quick quote and full quote automation for Viz.
 |------|--------|------|
 | Quick quote | POST | `/viz/reports` (dev: `/viz/quick-quote`) |
 | Full quote | POST | `/viz/full-quote` |
+| Endorsement | POST | `/viz/full-quote/endorsement` |
 | Annual payment | POST | `/viz/payments` |
 | Monthly payment | POST | `/viz/payments/monthly` |
 | Quote docs email | POST | `/viz/quote-docs/email` |
@@ -32,6 +33,17 @@ Configure paths via `VIZ_*_PATH` env vars (see `.env.example`).
 | Monthly | `fullQuote.priceBreakdown.monthlyBreakdown.firstInstallmentPayable` |
 
 Monthly full quote sets `isMonthlySubscription: true` via `buildVizMonthlyFullQuotePayload()`.
+
+## Endorsement mapping
+
+Prerequisite: bound monthly policy (QQ → monthly FQ → monthly payment).
+
+| Endorsement field | Source |
+|-------------------|--------|
+| `parentQuoteId`, `metadata.quoteId` | `fullQuote.fullQuote.id` |
+| `companyRevenue`, `companyName`, address, ABN, occupations, etc. | `fullQuote.fullQuote.req` |
+| `endorsementEffectiveDate` | `policyStartDate` + 15 days |
+| `metadata.viewType` | `"contactDetails"` |
 
 ## Email mapping
 
