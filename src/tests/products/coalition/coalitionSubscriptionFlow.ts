@@ -20,6 +20,13 @@ import { createQuickQuoteWithRetry } from '../../../products/coalition/services/
 import type { FullQuoteResponse } from '../../../products/coalition/types/fullQuote.types';
 import type { QuickQuoteResponse } from '../../../products/coalition/types/quickQuote.types';
 import { expectApiStatus } from '../../helpers/expectApiStatus';
+import {
+  expectCoalitionFullQuotePayload,
+  expectCoalitionFullQuoteResponse,
+  expectCoalitionPaymentPayload,
+  expectCoalitionPaymentResponse,
+  expectCoalitionQuickQuote,
+} from './coalitionFlowExpectations';
 
 export type CoalitionSubscriptionMode = 'annual' | 'monthly';
 
@@ -45,10 +52,16 @@ export async function runCoalitionSubscriptionFlow(
   expectApiStatus(quickQuoteResponse, 201);
 
   const quickQuote = quickQuoteResponse.body as QuickQuoteResponse;
-  const fullQuoteResponse = await createFullQuote(buildFullQuote(quickQuote));
+  expectCoalitionQuickQuote(quickQuote);
+
+  const fullQuotePayload = buildFullQuote(quickQuote);
+  expectCoalitionFullQuotePayload(fullQuotePayload, quickQuote, mode);
+
+  const fullQuoteResponse = await createFullQuote(fullQuotePayload);
   expectApiStatus(fullQuoteResponse, 201);
 
   const fullQuote = fullQuoteResponse.body as FullQuoteResponse;
+  expectCoalitionFullQuoteResponse(fullQuote, quickQuote, mode);
 
   const quoteDocsPayload = buildQuoteDocsEmailPayload(fullQuote);
   expect(quoteDocsPayload.quoteId).toBe(fullQuote.fullQuote.id);
@@ -64,9 +77,7 @@ export async function runCoalitionSubscriptionFlow(
       ? await buildAnnualPaymentPayloadFromFullQuote(fullQuote)
       : await buildMonthlyPaymentPayloadFromFullQuote(fullQuote);
 
-  expect(paymentPayload.quoteId).toBe(fullQuote.fullQuote.id);
-  expect(paymentPayload.paymentMethodId).toMatch(/^pm_/);
-  expect(fullQuote.fullQuote.isMonthlySubscription).toBe(mode === 'monthly');
+  expectCoalitionPaymentPayload(paymentPayload, fullQuote, mode);
 
   const paymentResponse =
     mode === 'annual'
@@ -84,4 +95,5 @@ export async function runCoalitionSubscriptionFlow(
   }
 
   expectApiStatus(paymentResponse, 201);
+  expectCoalitionPaymentResponse(paymentResponse.body);
 }
