@@ -9,7 +9,7 @@ on:
 jobs:
   api-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
       - name: Checkout
@@ -44,7 +44,16 @@ jobs:
           COALITION_QUOTE_DOCS_EMAIL_PATH: /coalition/quote-docs/email
           COALITION_PROOF_OF_INSURANCE_EMAIL_PATH: /coalition/proof-of-insurance/email
           QUOTE_DOCS_TIMEOUT: 120000
-        # Coalition full flow only (annual + monthly) — Viz skipped
+          VIZ_QUICK_QUOTE_PATH: /viz/quick-quote
+          VIZ_FULL_QUOTE_PATH: /viz/full-quote
+          VIZ_PAYMENTS_PATH: /viz/payments
+          VIZ_MONTHLY_PAYMENTS_PATH: /viz/payments/monthly
+          VIZ_ENDORSEMENT_PATH: /viz/full-quote/endorsement
+          VIZ_ENDORSEMENT_PAYMENTS_PATH: /viz/payments/endorsement
+          VIZ_ENDORSEMENT_MONTHLY_PAYMENTS_PATH: /viz/payments/endorsement/monthly
+          VIZ_QUOTE_DOCS_EMAIL_PATH: /viz/quote-docs/email
+          VIZ_PROOF_OF_INSURANCE_EMAIL_PATH: /viz/proof-of-insurance/email
+        # Coalition full flows (annual + monthly) and Viz full suite
         run: npm run test:ci -- --json --outputFile=reports/test-results.json
 
       - name: Upload HTML report
@@ -100,7 +109,6 @@ jobs:
                 "*\($product):* \($passed) passed · \($failed) failed"
               ) | join("\n")
             ' reports/test-results.json)
-            PRODUCT_SUMMARY="${PRODUCT_SUMMARY}"$'\n'"*Viz:* skipped"
             if [ "$FAILED" -gt 0 ]; then
               COLOR="#e01e5a"
             elif [ "$TOTAL" -gt 0 ]; then
