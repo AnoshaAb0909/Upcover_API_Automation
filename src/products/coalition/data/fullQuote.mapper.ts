@@ -1,6 +1,7 @@
 import {
   buildDefaultClientAddress,
   buildDefaultPolicyDates,
+  COALITION_FULL_QUOTE_DOMAIN_NAMES,
   defaultFullQuoteDeclarations,
 } from './fullQuote.defaults';
 import type { FullQuotePayload } from '../types/fullQuote.payload.types';
@@ -32,7 +33,7 @@ function mapDeclarations(
     engagedIndustries: [],
     encryptsData: applicationResponses.encryptsData,
     contentComplaints: applicationResponses.contentComplaints,
-    hasDomains: applicationResponses.hasDomains,
+    hasDomains: 'Yes',
     reviewsContent: applicationResponses.reviewsContent,
     priorClaims: applicationResponses.priorClaims,
     revenueAuActPercentage: applicationResponses.revenueAuActPercentage,
@@ -90,7 +91,7 @@ export function mapQuickQuoteResponseToFullQuotePayload(
     policyStartDate,
     policyExpiryDate,
     isMonthlySubscription,
-    domainNames: res.domainNames ?? [],
+    domainNames: COALITION_FULL_QUOTE_DOMAIN_NAMES,
     occupation: req.occupation,
     metadata: {
       quoteId,

@@ -1,4 +1,7 @@
-import { buildDefaultClientAddress } from './fullQuote.defaults';
+import {
+  buildDefaultClientAddress,
+  COALITION_FULL_QUOTE_DOMAIN_NAMES,
+} from './fullQuote.defaults';
 import type { FullQuotePayload } from '../types/fullQuote.payload.types';
 import type { QuickQuoteResponse } from '../types/quickQuote.types';
 
@@ -16,7 +19,7 @@ export const annualFullQuoteDeclarations: FullQuotePayload['declarations'] = {
   engagedIndustries: [],
   encryptsData: 'Sometimes',
   contentComplaints: 'No',
-  hasDomains: 'No',
+  hasDomains: 'Yes',
   reviewsContent: 'Yes',
   priorClaims: 'No',
   revenueAuActPercentage: 0,
@@ -45,7 +48,7 @@ export function buildAnnualFullQuoteOverrides(
     employeeCount: 56,
     companyGrossProfitNetRevenue: companyRevenue,
     defaultRetention: 1000,
-    domainNames: [],
+    domainNames: COALITION_FULL_QUOTE_DOMAIN_NAMES,
     metadata: {
       quoteId: '',
       viewType: 'contactDetails',

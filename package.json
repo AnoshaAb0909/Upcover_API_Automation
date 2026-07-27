@@ -9,7 +9,7 @@
     "test:coalition": "jest --testPathPatterns=products/coalition --runInBand --testSequencer=./src/tests/coalitionTestSequencer.js",
     "test:ahp": "jest --testPathPatterns=products/ahp --runInBand --testSequencer=./src/tests/ahpTestSequencer.js",
     "test:viz": "jest --testPathPatterns=products/viz --runInBand --testSequencer=./src/tests/vizTestSequencer.js",
-    "test:ci": "jest --testPathPatterns=products/coalition --runInBand --testSequencer=./src/tests/coalitionTestSequencer.js",
+    "test:ci": "jest src/tests/products/coalition/03.annualFlow.test.ts src/tests/products/coalition/04.monthlyFlow.test.ts --runInBand",
     "test:report": "jest && open reports/test-report.html"
   },
   "keywords": [

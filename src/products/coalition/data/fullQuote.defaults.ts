@@ -1,5 +1,9 @@
 import type { FullQuotePayload } from '../types/fullQuote.payload.types';
 
+export const COALITION_FULL_QUOTE_DOMAIN_NAMES: FullQuotePayload['domainNames'] = [
+  'www.success.coalitiontesting.com',
+];
+
 export const defaultFullQuoteCompanyAddress: FullQuotePayload['companyAddress'] = {
   street: '45 Clarke Street, Southbank VIC, Australia',
   city: 'Southbank',
@@ -33,7 +37,7 @@ export const defaultFullQuoteDeclarations: FullQuotePayload['declarations'] = {
   engagedIndustries: [],
   encryptsData: 'Sometimes',
   contentComplaints: 'No',
-  hasDomains: 'No',
+  hasDomains: 'Yes',
   reviewsContent: 'Yes',
   priorClaims: 'No',
   revenueAuActPercentage: 0,

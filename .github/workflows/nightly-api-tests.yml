@@ -44,7 +44,7 @@ jobs:
           COALITION_QUOTE_DOCS_EMAIL_PATH: /coalition/quote-docs/email
           COALITION_PROOF_OF_INSURANCE_EMAIL_PATH: /coalition/proof-of-insurance/email
           QUOTE_DOCS_TIMEOUT: 120000
-        # Coalition only — Viz skipped
+        # Coalition full flow only (annual + monthly) — Viz skipped
         run: npm run test:ci -- --json --outputFile=reports/test-results.json
 
       - name: Upload HTML report
