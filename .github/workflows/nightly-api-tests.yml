@@ -36,16 +36,15 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           FALLBACK_ANNUAL_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_ANNUAL_PAYMENT_METHOD_ID }}
           FALLBACK_MONTHLY_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
-          VIZ_QUICK_QUOTE_PATH: /viz/quick-quote
-          VIZ_FULL_QUOTE_PATH: /viz/full-quote
-          VIZ_PAYMENTS_PATH: /viz/payments
-          VIZ_MONTHLY_PAYMENTS_PATH: /viz/payments/monthly
-          VIZ_ENDORSEMENT_PATH: /viz/full-quote/endorsement
-          VIZ_ENDORSEMENT_PAYMENTS_PATH: /viz/payments/endorsement
-          VIZ_ENDORSEMENT_MONTHLY_PAYMENTS_PATH: /viz/payments/endorsement/monthly
-          VIZ_QUOTE_DOCS_EMAIL_PATH: /viz/quote-docs/email
-          VIZ_PROOF_OF_INSURANCE_EMAIL_PATH: /viz/proof-of-insurance/email
-        # Coalition excluded until dev env issues are resolved — Viz only
+          COALITION_QUICK_QUOTE_PATH: /coalition/quick-quote
+          COALITION_FULL_QUOTE_PATH: /coalition/full-quote
+          COALITION_PAYMENTS_PATH: /coalition/payments
+          COALITION_MONTHLY_PAYMENTS_PATH: /coalition/payments/monthly
+          COALITION_COUPON_ID: ec92858ce2
+          COALITION_QUOTE_DOCS_EMAIL_PATH: /coalition/quote-docs/email
+          COALITION_PROOF_OF_INSURANCE_EMAIL_PATH: /coalition/proof-of-insurance/email
+          QUOTE_DOCS_TIMEOUT: 120000
+        # Coalition only — Viz skipped
         run: npm run test:ci -- --json --outputFile=reports/test-results.json
 
       - name: Upload HTML report
@@ -101,7 +100,7 @@ jobs:
                 "*\($product):* \($passed) passed · \($failed) failed"
               ) | join("\n")
             ' reports/test-results.json)
-            PRODUCT_SUMMARY="${PRODUCT_SUMMARY}"$'\n'"*Coalition:* skipped (dev env issue)"
+            PRODUCT_SUMMARY="${PRODUCT_SUMMARY}"$'\n'"*Viz:* skipped"
             if [ "$FAILED" -gt 0 ]; then
               COLOR="#e01e5a"
             elif [ "$TOTAL" -gt 0 ]; then
