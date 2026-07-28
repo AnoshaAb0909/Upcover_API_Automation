@@ -17,6 +17,7 @@ import {
 } from '../../../products/coalition/services/payment.service';
 import { emailQuoteDocs } from '../../../products/coalition/services/quoteDocsEmail.service';
 import { createQuickQuoteWithRetry } from '../../../products/coalition/services/quickQuote.service';
+import type { FullQuotePayload } from '../../../products/coalition/types/fullQuote.payload.types';
 import type { FullQuoteResponse } from '../../../products/coalition/types/fullQuote.types';
 import type { QuickQuoteResponse } from '../../../products/coalition/types/quickQuote.types';
 import { expectApiStatus } from '../../helpers/expectApiStatus';
@@ -33,6 +34,7 @@ export type CoalitionSubscriptionMode = 'annual' | 'monthly';
 
 export interface CoalitionFlowContext {
   quickQuote: QuickQuoteResponse;
+  fullQuotePayload: FullQuotePayload;
   fullQuote: FullQuoteResponse;
 }
 
@@ -82,7 +84,11 @@ export async function runCoalitionFullQuoteStep(
   const fullQuote = fullQuoteResponse.body as FullQuoteResponse;
   expectCoalitionFullQuoteResponse(fullQuote, resolvedQuickQuote, mode);
 
-  return { quickQuote: resolvedQuickQuote, fullQuote };
+  return {
+    quickQuote: resolvedQuickQuote,
+    fullQuotePayload,
+    fullQuote,
+  };
 }
 
 export async function runCoalitionQuoteDocsStep(
