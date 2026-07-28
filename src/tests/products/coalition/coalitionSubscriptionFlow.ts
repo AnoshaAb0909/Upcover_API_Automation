@@ -25,10 +25,25 @@ import {
   expectCoalitionFullQuoteResponse,
   expectCoalitionPaymentPayload,
   expectCoalitionPaymentResponse,
+  expectCoalitionQuoteDocsPayload,
   expectCoalitionQuickQuote,
 } from './coalitionFlowExpectations';
 
 export type CoalitionSubscriptionMode = 'annual' | 'monthly';
+
+export interface CoalitionFlowContext {
+  quickQuote: QuickQuoteResponse;
+  fullQuote: FullQuoteResponse;
+}
+
+function getCoalitionFlowBuilders(mode: CoalitionSubscriptionMode) {
+  return {
+    buildQuickQuote:
+      mode === 'annual' ? buildAnnualQuickQuotePayload : buildQuickQuotePayload,
+    buildFullQuote:
+      mode === 'annual' ? buildAnnualFullQuotePayload : buildMonthlyFullQuotePayload,
+  };
+}
 
 function isMissingStripeCustomer(status: number, message: unknown): boolean {
   return (
@@ -36,35 +51,49 @@ function isMissingStripeCustomer(status: number, message: unknown): boolean {
   );
 }
 
-/**
- * Coalition happy path:
- * 1. Quick quote → 2. Full quote → 3. Quote docs email → 4. Payment
- */
-export async function runCoalitionSubscriptionFlow(
+export async function runCoalitionQuickQuoteStep(
   mode: CoalitionSubscriptionMode,
-): Promise<void> {
-  const buildQuickQuote =
-    mode === 'annual' ? buildAnnualQuickQuotePayload : buildQuickQuotePayload;
-  const buildFullQuote =
-    mode === 'annual' ? buildAnnualFullQuotePayload : buildMonthlyFullQuotePayload;
-
+): Promise<QuickQuoteResponse> {
+  const { buildQuickQuote } = getCoalitionFlowBuilders(mode);
   const quickQuoteResponse = await createQuickQuoteWithRetry(buildQuickQuote);
+
   expectApiStatus(quickQuoteResponse, 201);
 
   const quickQuote = quickQuoteResponse.body as QuickQuoteResponse;
   expectCoalitionQuickQuote(quickQuote);
 
-  const fullQuotePayload = buildFullQuote(quickQuote);
-  expectCoalitionFullQuotePayload(fullQuotePayload, quickQuote, mode);
+  return quickQuote;
+}
+
+export async function runCoalitionFullQuoteStep(
+  mode: CoalitionSubscriptionMode,
+  quickQuote?: QuickQuoteResponse,
+): Promise<CoalitionFlowContext> {
+  const resolvedQuickQuote =
+    quickQuote ?? (await runCoalitionQuickQuoteStep(mode));
+  const { buildFullQuote } = getCoalitionFlowBuilders(mode);
+  const fullQuotePayload = buildFullQuote(resolvedQuickQuote);
+
+  expectCoalitionFullQuotePayload(fullQuotePayload, resolvedQuickQuote, mode);
 
   const fullQuoteResponse = await createFullQuote(fullQuotePayload);
   expectApiStatus(fullQuoteResponse, 201);
 
   const fullQuote = fullQuoteResponse.body as FullQuoteResponse;
-  expectCoalitionFullQuoteResponse(fullQuote, quickQuote, mode);
+  expectCoalitionFullQuoteResponse(fullQuote, resolvedQuickQuote, mode);
 
+  return { quickQuote: resolvedQuickQuote, fullQuote };
+}
+
+export async function runCoalitionQuoteDocsStep(
+  mode: CoalitionSubscriptionMode,
+  context?: CoalitionFlowContext,
+): Promise<CoalitionFlowContext> {
+  const resolvedContext = context ?? (await runCoalitionFullQuoteStep(mode));
+  const { fullQuote } = resolvedContext;
   const quoteDocsPayload = buildQuoteDocsEmailPayload(fullQuote);
-  expect(quoteDocsPayload.quoteId).toBe(fullQuote.fullQuote.id);
+
+  expectCoalitionQuoteDocsPayload(quoteDocsPayload, fullQuote);
   expect(quoteDocsPayload.email).toBe(COALITION_NOTIFICATION_EMAIL);
 
   const quoteDocsResponse = await emailQuoteDocs(quoteDocsPayload);
@@ -72,6 +101,14 @@ export async function runCoalitionSubscriptionFlow(
   expect(quoteDocsResponse.status).not.toBe(401);
   expectApiStatus(quoteDocsResponse, 201);
 
+  return resolvedContext;
+}
+
+export async function runCoalitionPaymentStep(
+  mode: CoalitionSubscriptionMode,
+  context?: CoalitionFlowContext,
+): Promise<void> {
+  const { fullQuote } = context ?? (await runCoalitionFullQuoteStep(mode));
   const paymentPayload =
     mode === 'annual'
       ? await buildAnnualPaymentPayloadFromFullQuote(fullQuote)
@@ -89,11 +126,24 @@ export async function runCoalitionSubscriptionFlow(
 
   if (isMissingStripeCustomer(paymentResponse.status, paymentResponse.body?.message)) {
     console.warn(
-      `Coalition ${mode} flow stopped after quote docs: payment failed because Stripe customer is missing.`,
+      `Coalition ${mode} payment failed because Stripe customer is missing.`,
     );
     return;
   }
 
   expectApiStatus(paymentResponse, 201);
   expectCoalitionPaymentResponse(paymentResponse.body);
+}
+
+/**
+ * Coalition happy path:
+ * 1. Quick quote → 2. Full quote → 3. Quote docs email → 4. Payment
+ */
+export async function runCoalitionSubscriptionFlow(
+  mode: CoalitionSubscriptionMode,
+): Promise<void> {
+  const quickQuote = await runCoalitionQuickQuoteStep(mode);
+  const context = await runCoalitionFullQuoteStep(mode, quickQuote);
+  await runCoalitionQuoteDocsStep(mode, context);
+  await runCoalitionPaymentStep(mode, context);
 }

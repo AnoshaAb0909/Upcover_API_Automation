@@ -89,6 +89,14 @@ export function expectCoalitionPaymentPayload(
   }
 }
 
+export function expectCoalitionQuoteDocsPayload(
+  payload: { quoteId: string; email: string },
+  fullQuote: FullQuoteResponse,
+): void {
+  expect(payload.quoteId).toBe(fullQuote.fullQuote.id);
+  expect(payload.email).toBeTruthy();
+}
+
 export function expectCoalitionPaymentResponse(body: unknown): void {
   expect(body).toBeDefined();
   expect(body).not.toHaveProperty('statusCode');
