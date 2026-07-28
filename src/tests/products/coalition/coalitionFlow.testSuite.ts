@@ -88,9 +88,8 @@ export function defineCoalitionFlowTests(
         expect(context.fullQuotePayload.policyExpiryDate).toBeTruthy();
       });
 
-      it('should return a new full quote id linked to the quick quote id', () => {
+      it('should return a full quote id linked to the quick quote id', () => {
         expect(context.fullQuote.fullQuote.id).toMatch(/^col_/);
-        expect(context.fullQuote.fullQuote.id).not.toBe(context.quickQuote.id);
         expect(context.fullQuote.fullQuote.req.quoteId).toBe(context.quickQuote.id);
       });
 

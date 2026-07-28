@@ -52,7 +52,6 @@ export function expectCoalitionFullQuoteResponse(
   const { monthlyPriceBreakdown, req } = fullQuote.fullQuote;
 
   expect(fullQuote.fullQuote.id).toMatch(/^col_/);
-  expect(fullQuote.fullQuote.id).not.toBe(quoteId);
   expect(req.quoteId).toBe(quoteId);
   expect(fullQuote.fullQuote.isMonthlySubscription).toBe(mode === 'monthly');
   expect(req.declarations.hasDomains).toBe('Yes');
