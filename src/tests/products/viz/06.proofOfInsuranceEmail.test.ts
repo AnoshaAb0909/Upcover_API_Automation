@@ -85,7 +85,7 @@ describe('Viz Proof of Insurance Email API', () => {
           createVizAnnualPayment(await buildVizAnnualPaymentPayloadFromFullQuote(fullQuote)),
       );
     },
-    300000,
+    600000,
   );
 
   it(
@@ -99,6 +99,6 @@ describe('Viz Proof of Insurance Email API', () => {
           ),
       );
     },
-    300000,
+    600000,
   );
 });

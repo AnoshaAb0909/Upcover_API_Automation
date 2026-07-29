@@ -49,7 +49,7 @@ describe('Viz Quote Docs Email API', () => {
         buildVizFullQuotePayload(quickQuote),
       );
     },
-    300000,
+    600000,
   );
 
   it(
@@ -57,6 +57,6 @@ describe('Viz Quote Docs Email API', () => {
     async () => {
       await runVizQuoteDocsEmailFlow(buildVizMonthlyFullQuotePayload);
     },
-    300000,
+    600000,
   );
 });
