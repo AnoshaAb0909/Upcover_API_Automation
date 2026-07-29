@@ -69,4 +69,7 @@ export const env = {
     '/viz/proof-of-insurance/email',
   ahpQuickQuotePath: process.env.AHP_QUICK_QUOTE_PATH ?? '/quickQuote',
   ahpFullQuotePath: process.env.AHP_FULL_QUOTE_PATH ?? '/fullQuote',
+  ahpPaymentsPath: process.env.AHP_PAYMENTS_PATH ?? '/payment',
+  ahpMonthlyPaymentsPath:
+    process.env.AHP_MONTHLY_PAYMENTS_PATH ?? '/payment/monthly',
 };
