@@ -53,7 +53,11 @@ jobs:
           VIZ_ENDORSEMENT_MONTHLY_PAYMENTS_PATH: /viz/payments/endorsement/monthly
           VIZ_QUOTE_DOCS_EMAIL_PATH: /viz/quote-docs/email
           VIZ_PROOF_OF_INSURANCE_EMAIL_PATH: /viz/proof-of-insurance/email
-        # Coalition full flows (annual + monthly) and Viz full suite
+          AHP_QUICK_QUOTE_PATH: /quickQuote
+          AHP_FULL_QUOTE_PATH: /fullQuote
+          AHP_PAYMENTS_PATH: /payment
+          AHP_MONTHLY_PAYMENTS_PATH: /payment/monthly
+        # Coalition full flows (annual + monthly), Viz full suite, and AHP suite
         run: npm run test:ci -- --json --outputFile=reports/test-results.json
 
       - name: Upload HTML report
