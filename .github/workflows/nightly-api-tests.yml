@@ -26,11 +26,10 @@ jobs:
 
       - name: Run API tests
         id: tests
-        continue-on-error: true
         env:
           BASE_URL: ${{ secrets.BASE_URL }}
           GUEST_EMAIL: ${{ secrets.GUEST_EMAIL }}
-          REQUEST_TIMEOUT: 120000
+          REQUEST_TIMEOUT: 300000
           STRIPE_SECRET_KEY_ANNUAL: ${{ secrets.STRIPE_SECRET_KEY_ANNUAL }}
           STRIPE_SECRET_KEY_MONTHLY: ${{ secrets.STRIPE_SECRET_KEY_MONTHLY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
@@ -57,7 +56,7 @@ jobs:
           AHP_FULL_QUOTE_PATH: /fullQuote
           AHP_PAYMENTS_PATH: /payment
           AHP_MONTHLY_PAYMENTS_PATH: /payment/monthly
-        # Coalition full flows (annual + monthly), Viz full suite, and AHP suite
+        # Coalition → Viz → AHP (see ciTestSequencer.js)
         run: npm run test:ci -- --json --outputFile=reports/test-results.json
 
       - name: Upload HTML report
