@@ -22,7 +22,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: ${{ github.event_name == 'schedule' && fromJSON('["dev","staging"]') || (github.event.inputs.environment == 'both' && fromJSON('["dev","staging"]') || fromJSON(format('["{0}"]', github.event.inputs.environment))) }}
+        # Nightly schedule runs dev only. Staging is available via workflow_dispatch.
+        # environment: ${{ github.event_name == 'schedule' && fromJSON('["dev","staging"]') || ...
+        environment: ${{ github.event_name == 'schedule' && fromJSON('["dev"]') || (github.event.inputs.environment == 'both' && fromJSON('["dev","staging"]') || fromJSON(format('["{0}"]', github.event.inputs.environment))) }}
 
     name: api-tests (${{ matrix.environment }})
 
