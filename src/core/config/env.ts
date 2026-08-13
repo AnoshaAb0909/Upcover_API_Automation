@@ -1,4 +1,8 @@
 import dotenv from 'dotenv';
+import {
+  parseTargetEnvironment,
+  resolvePresetBaseUrl,
+} from './environments';
 
 dotenv.config({ quiet: true });
 
@@ -7,16 +11,15 @@ function readEnv(value: string | undefined): string | undefined {
   return trimmed || undefined;
 }
 
-function requireEnv(name: string, fallback?: string): string {
-  const value = readEnv(process.env[name]) ?? fallback;
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value;
+const targetEnvironment = parseTargetEnvironment(process.env.TARGET_ENV);
+
+function resolveBaseUrl(): string {
+  return readEnv(process.env.BASE_URL) ?? resolvePresetBaseUrl(targetEnvironment);
 }
 
 export const env = {
-  baseUrl: requireEnv('BASE_URL', 'https://dev-api.upcover.com'),
+  targetEnvironment,
+  baseUrl: resolveBaseUrl(),
   timeout: Number(process.env.REQUEST_TIMEOUT ?? 30000),
   guestEmail: process.env.GUEST_EMAIL ?? 'qa-automation@upcover.com',
   stripeSecretKey: readEnv(process.env.STRIPE_SECRET_KEY),

@@ -5,11 +5,26 @@ on:
     # 6:00 AM AEST (UTC+10) = 20:00 UTC the previous calendar day
     - cron: '0 20 * * *'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment(s)
+        type: choice
+        options:
+          - dev
+          - staging
+          - both
+        default: dev
 
 jobs:
   api-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ github.event_name == 'schedule' && fromJSON('["dev","staging"]') || (github.event.inputs.environment == 'both' && fromJSON('["dev","staging"]') || fromJSON(format('["{0}"]', github.event.inputs.environment))) }}
+
+    name: api-tests (${{ matrix.environment }})
 
     steps:
       - name: Checkout
@@ -24,17 +39,47 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Configure target environment
+        env:
+          DEV_BASE_URL: ${{ secrets.BASE_URL }}
+          STAGING_BASE_URL: ${{ secrets.STAGING_BASE_URL }}
+          DEV_STRIPE_ANNUAL: ${{ secrets.STRIPE_SECRET_KEY_ANNUAL }}
+          DEV_STRIPE_MONTHLY: ${{ secrets.STRIPE_SECRET_KEY_MONTHLY }}
+          DEV_STRIPE_LEGACY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STAGING_STRIPE_ANNUAL: ${{ secrets.STAGING_STRIPE_SECRET_KEY_ANNUAL }}
+          STAGING_STRIPE_MONTHLY: ${{ secrets.STAGING_STRIPE_SECRET_KEY_MONTHLY }}
+          STAGING_STRIPE_LEGACY: ${{ secrets.STAGING_STRIPE_SECRET_KEY }}
+          DEV_PM_ANNUAL: ${{ secrets.FALLBACK_ANNUAL_PAYMENT_METHOD_ID }}
+          DEV_PM_MONTHLY: ${{ secrets.FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
+          STAGING_PM_ANNUAL: ${{ secrets.STAGING_FALLBACK_ANNUAL_PAYMENT_METHOD_ID }}
+          STAGING_PM_MONTHLY: ${{ secrets.STAGING_FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
+        run: |
+          if [ "${{ matrix.environment }}" = "staging" ]; then
+            if [ -z "$STAGING_BASE_URL" ]; then
+              echo "STAGING_BASE_URL secret is required for staging runs."
+              exit 1
+            fi
+            echo "BASE_URL=$STAGING_BASE_URL" >> "$GITHUB_ENV"
+            echo "STRIPE_SECRET_KEY_ANNUAL=${STAGING_STRIPE_ANNUAL:-$DEV_STRIPE_ANNUAL}" >> "$GITHUB_ENV"
+            echo "STRIPE_SECRET_KEY_MONTHLY=${STAGING_STRIPE_MONTHLY:-$DEV_STRIPE_MONTHLY}" >> "$GITHUB_ENV"
+            echo "STRIPE_SECRET_KEY=${STAGING_STRIPE_LEGACY:-$DEV_STRIPE_LEGACY}" >> "$GITHUB_ENV"
+            echo "FALLBACK_ANNUAL_PAYMENT_METHOD_ID=${STAGING_PM_ANNUAL:-$DEV_PM_ANNUAL}" >> "$GITHUB_ENV"
+            echo "FALLBACK_MONTHLY_PAYMENT_METHOD_ID=${STAGING_PM_MONTHLY:-$DEV_PM_MONTHLY}" >> "$GITHUB_ENV"
+          else
+            echo "BASE_URL=$DEV_BASE_URL" >> "$GITHUB_ENV"
+            echo "STRIPE_SECRET_KEY_ANNUAL=$DEV_STRIPE_ANNUAL" >> "$GITHUB_ENV"
+            echo "STRIPE_SECRET_KEY_MONTHLY=$DEV_STRIPE_MONTHLY" >> "$GITHUB_ENV"
+            echo "STRIPE_SECRET_KEY=$DEV_STRIPE_LEGACY" >> "$GITHUB_ENV"
+            echo "FALLBACK_ANNUAL_PAYMENT_METHOD_ID=$DEV_PM_ANNUAL" >> "$GITHUB_ENV"
+            echo "FALLBACK_MONTHLY_PAYMENT_METHOD_ID=$DEV_PM_MONTHLY" >> "$GITHUB_ENV"
+          fi
+          echo "TARGET_ENV=${{ matrix.environment }}" >> "$GITHUB_ENV"
+
       - name: Run API tests
         id: tests
         env:
-          BASE_URL: ${{ secrets.BASE_URL }}
           GUEST_EMAIL: ${{ secrets.GUEST_EMAIL }}
           REQUEST_TIMEOUT: 300000
-          STRIPE_SECRET_KEY_ANNUAL: ${{ secrets.STRIPE_SECRET_KEY_ANNUAL }}
-          STRIPE_SECRET_KEY_MONTHLY: ${{ secrets.STRIPE_SECRET_KEY_MONTHLY }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          FALLBACK_ANNUAL_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_ANNUAL_PAYMENT_METHOD_ID }}
-          FALLBACK_MONTHLY_PAYMENT_METHOD_ID: ${{ secrets.FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
           COALITION_QUICK_QUOTE_PATH: /coalition/quick-quote
           COALITION_FULL_QUOTE_PATH: /coalition/full-quote
           COALITION_PAYMENTS_PATH: /coalition/payments
@@ -56,14 +101,14 @@ jobs:
           AHP_FULL_QUOTE_PATH: /fullQuote
           AHP_PAYMENTS_PATH: /payment
           AHP_MONTHLY_PAYMENTS_PATH: /payment/monthly
-        # Coalition → Viz → AHP (see ciTestSequencer.js)
-        run: npm run test:ci -- --json --outputFile=reports/test-results.json
+        run: |
+          npm run test:ci -- --json --outputFile=reports/test-results-${{ matrix.environment }}.json
 
       - name: Upload HTML report
         if: always() && hashFiles('reports/test-report.html') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: test-report-${{ github.run_id }}
+          name: test-report-${{ matrix.environment }}-${{ github.run_id }}
           path: reports/test-report.html
           retention-days: 14
 
@@ -73,6 +118,8 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           TEST_OUTCOME: ${{ steps.tests.outcome }}
           HAS_REPORT: ${{ hashFiles('reports/test-report.html') != '' }}
+          TARGET_ENV: ${{ matrix.environment }}
+          BASE_URL: ${{ env.BASE_URL }}
         run: |
           if [ -z "$SLACK_WEBHOOK_URL" ]; then
             echo "SLACK_WEBHOOK_URL secret is not set — skipping Slack notification."
@@ -85,10 +132,10 @@ jobs:
             *)       COLOR="#ecb22e" ;;
           esac
 
-          if [ -f reports/test-results.json ]; then
-            PASSED=$(jq -r '.numPassedTests // 0' reports/test-results.json)
-            FAILED=$(jq -r '.numFailedTests // 0' reports/test-results.json)
-            TOTAL=$(jq -r '.numTotalTests // 0' reports/test-results.json)
+          if [ -f "reports/test-results-${TARGET_ENV}.json" ]; then
+            PASSED=$(jq -r '.numPassedTests // 0' "reports/test-results-${TARGET_ENV}.json")
+            FAILED=$(jq -r '.numFailedTests // 0' "reports/test-results-${TARGET_ENV}.json")
+            TOTAL=$(jq -r '.numTotalTests // 0' "reports/test-results-${TARGET_ENV}.json")
             STATUS="${PASSED} passed · ${FAILED} failed (${TOTAL} total)"
             PRODUCT_SUMMARY=$(jq -r '
               def product_from_path($path):
@@ -111,7 +158,7 @@ jobs:
                 (map(select(.status == "failed")) | length) as $failed |
                 "*\($product):* \($passed) passed · \($failed) failed"
               ) | join("\n")
-            ' reports/test-results.json)
+            ' "reports/test-results-${TARGET_ENV}.json")
             if [ "$FAILED" -gt 0 ]; then
               COLOR="#e01e5a"
             elif [ "$TOTAL" -gt 0 ]; then
@@ -143,19 +190,28 @@ jobs:
             --arg branch "${{ github.ref_name }}" \
             --arg run_url "$RUN_URL" \
             --arg report_note "$REPORT_NOTE" \
+            --arg target_env "$TARGET_ENV" \
+            --arg base_url "$BASE_URL" \
             '{
               attachments: [{
                 color: $color,
                 blocks: [
                   {
                     type: "header",
-                    text: { type: "plain_text", text: "Upcover API Test Report" }
+                    text: { type: "plain_text", text: ("Upcover API Test Report (" + $target_env + ")") }
                   },
                   {
                     type: "section",
                     fields: [
                       { type: "mrkdwn", text: ("*Result:*\n" + $status) },
                       { type: "mrkdwn", text: ("*Run:*\n#" + $run_number) }
+                    ]
+                  },
+                  {
+                    type: "section",
+                    fields: [
+                      { type: "mrkdwn", text: ("*Environment:*\n" + $target_env) },
+                      { type: "mrkdwn", text: ("*Base URL:*\n" + $base_url) }
                     ]
                   },
                   {
