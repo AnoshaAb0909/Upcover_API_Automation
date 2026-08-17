@@ -163,7 +163,37 @@ jobs:
             ' "reports/test-results-${TARGET_ENV}.json")
             if [ "$FAILED" -gt 0 ]; then
               COLOR="#e01e5a"
-            elif [ "$TOTAL" -gt 0 ]; then
+              FAILURE_SUMMARY=$(jq -r '
+                def first_line($text):
+                  ($text // "Unknown failure")
+                  | gsub("\u001b\\[[0-9;]*m"; "")
+                  | gsub("`"; "'")
+                  | split("\n")
+                  | map(select(length > 0))
+                  | .[0] // "Unknown failure"
+                  | .[0:220];
+
+                [.testResults[] |
+                  .name as $path |
+                  ($path | split("/") | last) as $file |
+                  (
+                    [.assertionResults[] | select(.status == "failed") |
+                      "• *\($file)* › \(.title)\n  \(first_line(.failureMessages[0]))"
+                    ] +
+                    (if .status == "failed" and ((.message // "") | length > 0) then
+                      ["• *\($file)* › suite setup\n  \(first_line(.message))"]
+                    else [] end)
+                  )[]
+                ] | .[0:8] | if length == 0 then "Failure details unavailable." else join("\n") end
+              ' "reports/test-results-${TARGET_ENV}.json")
+              if [ "$FAILED" -gt 8 ]; then
+                REMAINING=$((FAILED - 8))
+                FAILURE_SUMMARY="${FAILURE_SUMMARY}"$'\n'"_...and ${REMAINING} more failure(s)_"
+              fi
+            else
+              FAILURE_SUMMARY=""
+            fi
+            if [ "$TOTAL" -gt 0 ] && [ "$FAILED" -eq 0 ]; then
               COLOR="#36a64f"
             fi
           else
@@ -172,6 +202,11 @@ jobs:
             TOTAL="?"
             STATUS="Test results unavailable"
             PRODUCT_SUMMARY="Product breakdown unavailable"
+            FAILURE_SUMMARY=""
+          fi
+
+          if [ "$TEST_OUTCOME" = "failure" ] && [ -z "$FAILURE_SUMMARY" ]; then
+            FAILURE_SUMMARY="Test step failed before Jest results were written. Check the GitHub Actions log for details."
           fi
 
           if [ "$HAS_REPORT" = "true" ]; then
@@ -187,6 +222,7 @@ jobs:
             --arg color "$COLOR" \
             --arg status "$STATUS" \
             --arg product_summary "$PRODUCT_SUMMARY" \
+            --arg failure_summary "$FAILURE_SUMMARY" \
             --arg run_number "${{ github.run_number }}" \
             --arg trigger "$TRIGGER" \
             --arg branch "${{ github.ref_name }}" \
@@ -220,6 +256,15 @@ jobs:
                     type: "section",
                     text: { type: "mrkdwn", text: $product_summary }
                   },
+                  (if ($failure_summary | length) > 0 then
+                    {
+                      type: "section",
+                      text: {
+                        type: "mrkdwn",
+                        text: ("*Failure reasons:*\n" + $failure_summary)
+                      }
+                    }
+                  else empty end),
                   {
                     type: "section",
                     fields: [
