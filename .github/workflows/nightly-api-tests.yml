@@ -22,8 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Nightly schedule runs dev and staging. Manual dispatch can target dev, staging, or both.
-        environment: ${{ github.event_name == 'schedule' && fromJSON('["dev","staging"]') || (github.event.inputs.environment == 'both' && fromJSON('["dev","staging"]') || fromJSON(format('["{0}"]', github.event.inputs.environment))) }}
+        # Nightly schedule runs staging only. Manual dispatch can target dev, staging, or both.
+        environment: ${{ github.event_name == 'schedule' && fromJSON('["staging"]') || (github.event.inputs.environment == 'both' && fromJSON('["dev","staging"]') || fromJSON(format('["{0}"]', github.event.inputs.environment))) }}
 
     name: api-tests (${{ matrix.environment }})
 
