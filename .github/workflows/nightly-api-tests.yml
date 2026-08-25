@@ -167,7 +167,7 @@ jobs:
                 def first_line($text):
                   ($text // "Unknown failure")
                   | gsub("\u001b\\[[0-9;]*m"; "")
-                  | gsub("\u0060"; "'")
+                  | gsub("\u0060"; "")
                   | split("\n")
                   | map(select(length > 0))
                   | .[0] // "Unknown failure"
