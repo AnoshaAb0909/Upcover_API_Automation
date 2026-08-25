@@ -115,6 +115,7 @@ jobs:
 
       - name: Notify Slack
         if: always()
+        continue-on-error: true
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           TEST_OUTCOME: ${{ steps.tests.outcome }}
@@ -280,6 +281,13 @@ jobs:
                   }
                 ]
               }]
-            }' | curl -sf -X POST "$SLACK_WEBHOOK_URL" \
+            }' > /tmp/slack-payload.json
+
+          HTTP_CODE=$(curl -sS -w "%{http_code}" -o /tmp/slack-response.txt -X POST "$SLACK_WEBHOOK_URL" \
             -H 'Content-type: application/json' \
-            --data @-
+            --data @/tmp/slack-payload.json)
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Slack notification failed (non-fatal). HTTP ${HTTP_CODE}"
+            cat /tmp/slack-response.txt
+          fi
