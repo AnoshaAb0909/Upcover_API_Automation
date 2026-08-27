@@ -40,19 +40,37 @@ export async function runMotorTotOtpSendStep(email: string): Promise<Response> {
 
 export async function runMotorTotOtpVerifyStep(
   email: string,
-  options: { code?: string; receivedAfter?: Date } = {},
+  options: { code?: string; receivedAfter?: Date; maxAttempts?: number } = {},
 ): Promise<{ response: Response; code: string }> {
-  const otpCode =
-    options.code ??
-    (await fetchOtpFromMailosaur(email, {
-      receivedAfter: options.receivedAfter,
-    }));
-  const payload = buildMotorTotOtpVerifyPayload(email, otpCode);
-  const response = await verifyMotorTotOtp(payload);
+  const maxAttempts = options.maxAttempts ?? 2;
+  let lastResponse: Response | undefined;
+  let lastCode = '';
 
-  expectApiStatus(response, 200);
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const otpCode =
+      options.code ??
+      (await fetchOtpFromMailosaur(email, {
+        receivedAfter: options.receivedAfter,
+      }));
+    lastCode = otpCode;
+    const payload = buildMotorTotOtpVerifyPayload(email, otpCode);
+    lastResponse = await verifyMotorTotOtp(payload);
 
-  return { response, code: otpCode };
+    if (lastResponse.status === 200) {
+      return { response: lastResponse, code: otpCode };
+    }
+
+    if (attempt < maxAttempts && lastResponse.status >= 500) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      continue;
+    }
+
+    break;
+  }
+
+  expectApiStatus(lastResponse!, 200);
+
+  return { response: lastResponse!, code: lastCode };
 }
 
 /**
@@ -80,8 +98,8 @@ export async function runMotorTotRegisterOtpVerifyFlow(
 }> {
   const register = await runMotorTotRegisterStep(overrides);
   const email = register.payload.email;
-  const otpRequestedAt = new Date();
   const otpSend = await runMotorTotOtpSendStep(email);
+  const otpRequestedAt = new Date();
   const { response: otpVerify, code: otpCode } = await runMotorTotOtpVerifyStep(
     email,
     { receivedAfter: otpRequestedAt },

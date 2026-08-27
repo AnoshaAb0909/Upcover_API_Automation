@@ -77,17 +77,20 @@ function extractOtpFromText(text: string): string | undefined {
 }
 
 function extractOtpFromMessage(message: MailosaurMessageBody): string {
-  const candidates = [
-    message.subject ?? '',
-    message.text?.body ?? '',
-    message.html?.body ?? '',
-  ];
+  const textBody = message.text?.body ?? '';
+  const otpFromText = extractOtpFromText(textBody);
+  if (otpFromText) {
+    return otpFromText;
+  }
 
-  for (const candidate of candidates) {
-    const otp = extractOtpFromText(candidate);
-    if (otp) {
-      return otp;
-    }
+  const subjectOtp = extractOtpFromText(message.subject ?? '');
+  if (subjectOtp) {
+    return subjectOtp;
+  }
+
+  const htmlOtp = extractOtpFromText(message.html?.body ?? '');
+  if (htmlOtp) {
+    return htmlOtp;
   }
 
   throw new Error('Could not find an OTP code in the Mailosaur message body.');
