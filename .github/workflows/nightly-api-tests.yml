@@ -14,6 +14,13 @@ on:
           - staging
           - both
         default: dev
+      product:
+        description: Product suite (MotorTOT requires staging)
+        type: choice
+        options:
+          - all
+          - motortot
+        default: all
 
 jobs:
   api-tests:
@@ -117,11 +124,21 @@ jobs:
           MAILOSAUR_OTP_TIMEOUT_MS: 90000
           MAILOSAUR_OTP_POLL_INTERVAL_MS: 3000
         run: |
+          PRODUCT="${{ github.event.inputs.product || 'all' }}"
           CI_ARGS=(--json "--outputFile=reports/test-results-${{ matrix.environment }}.json")
-          if [ "$TARGET_ENV" != "staging" ]; then
+
+          if [ "$PRODUCT" = "motortot" ]; then
+            if [ "$TARGET_ENV" != "staging" ]; then
+              echo "MotorTOT tests require staging. Re-run with environment=staging."
+              exit 1
+            fi
+            npx jest --testPathPatterns=products/motorTot/04 --runInBand "${CI_ARGS[@]}"
+          elif [ "$TARGET_ENV" != "staging" ]; then
             CI_ARGS=(--testPathIgnorePatterns=products/motorTot "${CI_ARGS[@]}")
+            npm run test:ci -- "${CI_ARGS[@]}"
+          else
+            npm run test:ci -- "${CI_ARGS[@]}"
           fi
-          npm run test:ci -- "${CI_ARGS[@]}"
 
       - name: Upload HTML report
         if: always() && hashFiles('reports/test-report.html') != ''
