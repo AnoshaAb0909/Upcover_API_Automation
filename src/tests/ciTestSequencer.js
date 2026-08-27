@@ -1,6 +1,6 @@
 const Sequencer = require('@jest/test-sequencer').default;
 
-const PRODUCT_RUN_ORDER = ['coalition', 'viz', 'ahp'];
+const PRODUCT_RUN_ORDER = ['coalition', 'viz', 'ahp', 'motorTot'];
 
 function productRank(testPath) {
   const index = PRODUCT_RUN_ORDER.findIndex((product) =>

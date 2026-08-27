@@ -54,6 +54,8 @@ jobs:
           DEV_PM_MONTHLY: ${{ secrets.FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
           STAGING_PM_ANNUAL: ${{ secrets.STAGING_FALLBACK_ANNUAL_PAYMENT_METHOD_ID }}
           STAGING_PM_MONTHLY: ${{ secrets.STAGING_FALLBACK_MONTHLY_PAYMENT_METHOD_ID }}
+          STAGING_MOTOR_TOT_BASE_URL: ${{ secrets.STAGING_MOTOR_TOT_BASE_URL }}
+          DEV_MOTOR_TOT_BASE_URL: ${{ secrets.DEV_MOTOR_TOT_BASE_URL }}
         run: |
           if [ "${{ matrix.environment }}" = "staging" ]; then
             if [ -z "$STAGING_BASE_URL" ]; then
@@ -66,8 +68,12 @@ jobs:
             echo "STRIPE_SECRET_KEY=${STAGING_STRIPE_LEGACY:-$DEV_STRIPE_LEGACY}" >> "$GITHUB_ENV"
             echo "FALLBACK_ANNUAL_PAYMENT_METHOD_ID=${STAGING_PM_ANNUAL:-$DEV_PM_ANNUAL}" >> "$GITHUB_ENV"
             echo "FALLBACK_MONTHLY_PAYMENT_METHOD_ID=${STAGING_PM_MONTHLY:-$DEV_PM_MONTHLY}" >> "$GITHUB_ENV"
+            echo "MOTOR_TOT_BASE_URL=${STAGING_MOTOR_TOT_BASE_URL:-https://staging.upcover.com/api}" >> "$GITHUB_ENV"
           else
             echo "BASE_URL=$DEV_BASE_URL" >> "$GITHUB_ENV"
+            if [ -n "$DEV_MOTOR_TOT_BASE_URL" ]; then
+              echo "MOTOR_TOT_BASE_URL=$DEV_MOTOR_TOT_BASE_URL" >> "$GITHUB_ENV"
+            fi
             echo "STRIPE_SECRET_KEY_ANNUAL=$DEV_STRIPE_ANNUAL" >> "$GITHUB_ENV"
             echo "STRIPE_SECRET_KEY_MONTHLY=$DEV_STRIPE_MONTHLY" >> "$GITHUB_ENV"
             echo "STRIPE_SECRET_KEY=$DEV_STRIPE_LEGACY" >> "$GITHUB_ENV"
@@ -102,8 +108,20 @@ jobs:
           AHP_FULL_QUOTE_PATH: /fullQuote
           AHP_PAYMENTS_PATH: /payment
           AHP_MONTHLY_PAYMENTS_PATH: /payment/monthly
+          MOTOR_TOT_REGISTER_PATH: /motor-tot-au/auth/register
+          MOTOR_TOT_OTP_SEND_PATH: /motor-tot-au/auth/otp/send
+          MOTOR_TOT_OTP_VERIFY_PATH: /motor-tot-au/auth/otp/verify
+          MOTOR_TOT_QUICK_QUOTE_PATH: /motor-tot-au/quick-quote
+          MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
+          MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
+          MAILOSAUR_OTP_TIMEOUT_MS: 90000
+          MAILOSAUR_OTP_POLL_INTERVAL_MS: 3000
         run: |
-          npm run test:ci -- --json --outputFile=reports/test-results-${{ matrix.environment }}.json
+          CI_ARGS=(--json "--outputFile=reports/test-results-${{ matrix.environment }}.json")
+          if [ "$TARGET_ENV" != "staging" ]; then
+            CI_ARGS=(--testPathIgnorePatterns=products/motorTot "${CI_ARGS[@]}")
+          fi
+          npm run test:ci -- "${CI_ARGS[@]}"
 
       - name: Upload HTML report
         if: always() && hashFiles('reports/test-report.html') != ''
@@ -144,6 +162,7 @@ jobs:
                 if ($path | test("/products/coalition/")) then "Coalition"
                 elif ($path | test("/products/viz/")) then "Viz"
                 elif ($path | test("/products/ahp/")) then "AHP"
+                elif ($path | test("/products/motorTot/")) then "MotorTOT"
                 elif ($path | test("/products/ppl/")) then "PPL"
                 elif ($path | test("/products/cyber/")) then "Cyber"
                 elif ($path | test("/auth/")) then "Auth"

@@ -75,4 +75,20 @@ export const env = {
   ahpPaymentsPath: process.env.AHP_PAYMENTS_PATH ?? '/payment',
   ahpMonthlyPaymentsPath:
     process.env.AHP_MONTHLY_PAYMENTS_PATH ?? '/payment/monthly',
+  motorTotBaseUrl:
+    readEnv(process.env.MOTOR_TOT_BASE_URL) ?? resolveBaseUrl(),
+  motorTotRegisterPath:
+    process.env.MOTOR_TOT_REGISTER_PATH ?? '/motor-tot-au/auth/register',
+  motorTotOtpSendPath:
+    process.env.MOTOR_TOT_OTP_SEND_PATH ?? '/motor-tot-au/auth/otp/send',
+  motorTotOtpVerifyPath:
+    process.env.MOTOR_TOT_OTP_VERIFY_PATH ?? '/motor-tot-au/auth/otp/verify',
+  motorTotQuickQuotePath:
+    process.env.MOTOR_TOT_QUICK_QUOTE_PATH ?? '/motor-tot-au/quick-quote',
+  mailosaurServerId: readEnv(process.env.MAILOSAUR_SERVER_ID),
+  mailosaurApiKey: readEnv(process.env.MAILOSAUR_API_KEY),
+  mailosaurOtpTimeoutMs: Number(process.env.MAILOSAUR_OTP_TIMEOUT_MS ?? 60000),
+  mailosaurOtpPollIntervalMs: Number(
+    process.env.MAILOSAUR_OTP_POLL_INTERVAL_MS ?? 3000,
+  ),
 };
