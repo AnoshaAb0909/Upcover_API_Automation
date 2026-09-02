@@ -20,12 +20,13 @@ describe('Viz Quick Quote API', () => {
       expect(data.id).toBeTruthy();
       expect(typeof data.id).toBe('string');
       expect(data.id.startsWith('viz_')).toBe(true);
-      expect(data.partnerId).toBe('upcover');
       expect(data.req.companyRevenue).toBe(payload.companyRevenue);
       expect(data.req.state).toBe(payload.state);
       expect(data.req.aggregateLimit).toBe(payload.aggregateLimit);
       expect(data.req.excess).toBe(payload.excess);
-      expect(data.req.clientInformation.email).toBe(payload.clientInformation.email);
+      expect(data.req.occupations).toEqual(payload.occupations);
+      expect(data.req.declarations).toEqual(payload.declarations);
+      expect(payload.isMonthlySubscription).toBe(false);
     },
     300000,
   );

@@ -26,7 +26,6 @@ export function buildVizEndorsementMonthlyFullQuotePayload(
       ...vizEndorsementMonthlyFullQuoteTemplate,
       policyStartDate,
       policyExpiryDate,
-      clientInformation: quickQuote.req.clientInformation,
       ...overrides,
     },
   });
@@ -44,7 +43,6 @@ export function buildVizEndorsementAnnualFullQuotePayload(
       ...vizEndorsementAnnualFullQuoteTemplate,
       policyStartDate,
       policyExpiryDate,
-      clientInformation: quickQuote.req.clientInformation,
       ...overrides,
     },
   });

@@ -1,4 +1,11 @@
-import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
+import {
+  VIZ_QUICK_QUOTE_DECLARATION_ID,
+  VIZ_QUICK_QUOTE_OCCUPATION_ID,
+} from '../../../products/viz/data/quickQuote.defaults';
+import {
+  buildVizMonthlyQuickQuotePayload,
+  buildVizQuickQuotePayload,
+} from '../../../products/viz/data/quickQuote.payload';
 import {
   buildVizEndorsementAnnualFullQuotePayload,
   buildVizEndorsementAnnualPayload,
@@ -23,6 +30,10 @@ import {
   vizEndorsementMonthlyFullQuoteTemplate,
 } from '../../../products/viz/data/endorsement.fullQuote.defaults';
 import {
+  buildVizFullQuotePayload,
+  buildVizMonthlyFullQuotePayload,
+} from '../../../products/viz/data/fullQuote.payload';
+import {
   resolveVizClientPayable,
   resolveVizFirstInstallmentPayable,
   resolveVizFullQuoteId,
@@ -34,14 +45,19 @@ import {
 } from '../../helpers/vizMockFixtures';
 
 describe('Viz quick quote payload mapping', () => {
-  it('should generate client information with email and phone number', () => {
+  it('should send occupation id and top-level declaration without client information', () => {
     const payload = buildVizQuickQuotePayload();
 
-    expect(payload.clientInformation.email).toContain('@');
-    expect(payload.clientInformation.firstName).toBeTruthy();
-    expect(payload.clientInformation.lastName).toBeTruthy();
-    expect(payload.clientInformation.phoneNumber).toMatch(/^04/);
-    expect(payload.partnerId).toBe('upcover');
+    expect(payload.occupations).toEqual([
+      { occupationId: VIZ_QUICK_QUOTE_OCCUPATION_ID },
+    ]);
+    expect(payload.declarations).toEqual([
+      { id: VIZ_QUICK_QUOTE_DECLARATION_ID, answer: false },
+    ]);
+    expect(payload.isMonthlySubscription).toBe(false);
+    expect(payload).not.toHaveProperty('clientInformation');
+    expect(payload).not.toHaveProperty('partnerId');
+    expect(payload.occupations[0]).not.toHaveProperty('secondDeclaration');
   });
 
   it('should keep default aggregate limit and excess values', () => {
@@ -50,6 +66,29 @@ describe('Viz quick quote payload mapping', () => {
     expect(payload.aggregateLimit).toBe(5000000);
     expect(payload.excess).toBe(500);
     expect(payload.state).toBe('NSW');
+  });
+
+  it('should set isMonthlySubscription on monthly quick quote', () => {
+    expect(buildVizMonthlyQuickQuotePayload().isMonthlySubscription).toBe(true);
+  });
+});
+
+describe('Viz full quote payload mapping', () => {
+  const quickQuote = buildMockVizQuickQuoteResponse();
+
+  it('should copy occupations and declarations from quick quote without secondDeclaration', () => {
+    const payload = buildVizFullQuotePayload(quickQuote);
+
+    expect(payload.occupations).toEqual(quickQuote.req.occupations);
+    expect(payload.declarations).toEqual(quickQuote.req.declarations);
+    expect(payload.occupations[0]).not.toHaveProperty('secondDeclaration');
+    expect(payload.isMonthlySubscription).toBe(false);
+  });
+
+  it('should set isMonthlySubscription on monthly full quote', () => {
+    expect(buildVizMonthlyFullQuotePayload(quickQuote).isMonthlySubscription).toBe(
+      true,
+    );
   });
 });
 
@@ -61,10 +100,12 @@ describe('Viz endorsement full quote payload mapping', () => {
 
     expect(payload.quoteId).toBe(quickQuote.id);
     expect(payload.metadata.quoteId).toBe(quickQuote.id);
-    expect(payload.clientInformation).toEqual(quickQuote.req.clientInformation);
+    expect(payload.clientInformation.email).toContain('@upcover.com');
+    expect(payload.clientInformation.phoneNumber).toMatch(/^04/);
     expect(payload.isMonthlySubscription).toBe(true);
     expect(payload.companyName).toBe(vizEndorsementMonthlyFullQuoteTemplate.companyName);
     expect(payload.state).toBe('QLD');
+    expect(payload.declarations).toEqual(quickQuote.req.declarations);
   });
 
   it('should map annual endorsement full quote fields from quick quote', () => {
@@ -72,10 +113,11 @@ describe('Viz endorsement full quote payload mapping', () => {
 
     expect(payload.quoteId).toBe(quickQuote.id);
     expect(payload.metadata.quoteId).toBe(quickQuote.id);
-    expect(payload.clientInformation).toEqual(quickQuote.req.clientInformation);
+    expect(payload.clientInformation.email).toContain('@upcover.com');
     expect(payload.isMonthlySubscription).toBe(false);
     expect(payload.companyName).toBe(vizEndorsementAnnualFullQuoteTemplate.companyName);
     expect(payload.state).toBe('VIC');
+    expect(payload.declarations).toEqual(quickQuote.req.declarations);
   });
 });
 

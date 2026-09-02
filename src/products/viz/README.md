@@ -21,7 +21,7 @@ Configure paths via `VIZ_*_PATH` env vars (see `.env.example`).
 | Full quote field | Source |
 |------------------|--------|
 | `quoteId`, `metadata.quoteId` | `quickQuote.id` |
-| `clientInformation` | `quickQuote.req.clientInformation` |
+| `clientInformation` | Generated dummy client (no longer on QQ) |
 | All other fields | Static template (`TRES ABOGADOS PTY LTD`, tools/taxAudit included, etc.) |
 | `policyStartDate`, `policyExpiryDate` | Today → +1 year (Australia/Melbourne) |
 

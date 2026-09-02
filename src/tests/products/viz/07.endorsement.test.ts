@@ -11,7 +11,7 @@ import {
 import { vizEndorsementMonthlyFullQuoteTemplate } from '../../../products/viz/data/endorsement.fullQuote.defaults';
 import { resolveVizQuickQuoteId } from '../../../products/viz/data/fullQuote.payload';
 import { buildVizMonthlyPaymentPayloadFromFullQuote } from '../../../products/viz/data/payment.payload';
-import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
+import { buildVizMonthlyQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
 import {
   createVizEndorsement,
   createVizEndorsementMonthlyPaymentWithApproval,
@@ -42,7 +42,7 @@ describe('Viz Monthly Endorsement API', () => {
 
   beforeAll(async () => {
     const quickQuoteResponse = await createVizQuickQuoteWithRetry(
-      buildVizQuickQuotePayload,
+      buildVizMonthlyQuickQuotePayload,
     );
 
     expectApiStatus(quickQuoteResponse, 201);
@@ -77,7 +77,7 @@ describe('Viz Monthly Endorsement API', () => {
 
     expect(fullQuotePayload.quoteId).toBe(quoteId);
     expect(fullQuotePayload.metadata.quoteId).toBe(quoteId);
-    expect(fullQuotePayload.clientInformation).toEqual(quickQuote.req.clientInformation);
+    expect(fullQuotePayload.clientInformation.email).toContain('@upcover.com');
     expect(fullQuotePayload.isMonthlySubscription).toBe(true);
     expect(fullQuotePayload.companyName).toBe(
       vizEndorsementMonthlyFullQuoteTemplate.companyName,

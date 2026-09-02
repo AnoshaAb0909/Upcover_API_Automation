@@ -1,6 +1,11 @@
 import type { VizQuickQuotePayload } from './quickQuote.payload.types';
 
-export type { VizQuickQuotePayload, VizClientInformation, VizOccupationInput } from './quickQuote.payload.types';
+export type {
+  VizQuickQuotePayload,
+  VizClientInformation,
+  VizDeclarationInput,
+  VizOccupationInput,
+} from './quickQuote.payload.types';
 
 export interface VizQuickQuoteResponse {
   id: string;

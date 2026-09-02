@@ -1,4 +1,8 @@
 import { vizEndorsementAnnualFullQuoteTemplate } from '../../products/viz/data/endorsement.fullQuote.defaults';
+import {
+  VIZ_QUICK_QUOTE_DECLARATION_ID,
+  VIZ_QUICK_QUOTE_OCCUPATION_ID,
+} from '../../products/viz/data/quickQuote.defaults';
 import type { VizEndorsementResponse } from '../../products/viz/types/endorsement.payload.types';
 import type { VizFullQuoteResponse } from '../../products/viz/types/fullQuote.types';
 import type { VizQuickQuoteResponse } from '../../products/viz/types/quickQuote.types';
@@ -15,21 +19,30 @@ export function buildMockVizQuickQuoteResponse(
 ): VizQuickQuoteResponse {
   return {
     id: 'viz_mock-quick-quote-id',
+    type: 'quickQuote',
     partnerId: 'upcover',
     req: {
       companyRevenue: 2500000,
       state: 'NSW',
       aggregateLimit: 5000000,
       excess: 500,
-      partnerId: 'upcover',
-      clientInformation: mockVizClientInformation,
+      isMonthlySubscription: false,
       occupations: [
         {
-          occupationId: '51a52b8b-6119-4256-93ea-31e795d0b8fe',
-          secondDeclaration: false,
+          occupationId: VIZ_QUICK_QUOTE_OCCUPATION_ID,
+        },
+      ],
+      declarations: [
+        {
+          id: VIZ_QUICK_QUOTE_DECLARATION_ID,
+          answer: false,
         },
       ],
     },
+    res: {},
+    priceBreakdown: {},
+    requestType: 'quickQuote',
+    createdAt: '2026-09-02T00:00:00.000Z',
     ...overrides,
   };
 }

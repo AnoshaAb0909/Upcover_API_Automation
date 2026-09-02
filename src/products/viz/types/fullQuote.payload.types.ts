@@ -1,4 +1,8 @@
-import type { VizClientInformation, VizOccupationInput } from './quickQuote.payload.types';
+import type {
+  VizClientInformation,
+  VizDeclarationInput,
+  VizOccupationInput,
+} from './quickQuote.payload.types';
 
 export interface VizCompanyAddress {
   street: string;
@@ -51,6 +55,7 @@ export interface VizFullQuotePayload {
   policyStartDate: string;
   policyExpiryDate: string;
   occupations: VizOccupationInput[];
+  declarations: VizDeclarationInput[];
   isMonthlySubscription: boolean;
   tools: VizOptionalCover;
   taxAudit: VizOptionalCover;

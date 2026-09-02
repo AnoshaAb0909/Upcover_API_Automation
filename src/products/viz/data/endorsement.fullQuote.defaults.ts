@@ -1,3 +1,7 @@
+import {
+  defaultVizFullQuoteDeclarations,
+  defaultVizFullQuoteOccupations,
+} from './fullQuote.defaults';
 import type { VizFullQuotePayload } from '../types/fullQuote.payload.types';
 
 export const vizEndorsementFullQuoteCompanyAddress: VizFullQuotePayload['companyAddress'] =
@@ -46,12 +50,8 @@ export const vizEndorsementMonthlyFullQuoteTemplate: Omit<
   state: 'QLD',
   aggregateLimit: 5000000,
   excess: 500,
-  occupations: [
-    {
-      occupationId: '51a52b8b-6119-4256-93ea-31e795d0b8fe',
-      secondDeclaration: false,
-    },
-  ],
+  occupations: defaultVizFullQuoteOccupations,
+  declarations: defaultVizFullQuoteDeclarations,
   isMonthlySubscription: true,
   tools: {
     include: false,
@@ -110,12 +110,8 @@ export const vizEndorsementAnnualFullQuoteTemplate: Omit<
   state: 'VIC',
   aggregateLimit: 5000000,
   excess: 500,
-  occupations: [
-    {
-      occupationId: '51a52b8b-6119-4256-93ea-31e795d0b8fe',
-      secondDeclaration: false,
-    },
-  ],
+  occupations: defaultVizFullQuoteOccupations,
+  declarations: defaultVizFullQuoteDeclarations,
   isMonthlySubscription: false,
   tools: {
     include: false,

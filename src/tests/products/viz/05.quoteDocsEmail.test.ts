@@ -4,7 +4,10 @@ import {
   buildVizFullQuotePayload,
   buildVizMonthlyFullQuotePayload,
 } from '../../../products/viz/data/fullQuote.payload';
-import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
+import {
+  buildVizMonthlyQuickQuotePayload,
+  buildVizQuickQuotePayload,
+} from '../../../products/viz/data/quickQuote.payload';
 import { createVizFullQuote } from '../../../products/viz/services/fullQuote.service';
 import { emailVizQuoteDocs } from '../../../products/viz/services/quoteDocsEmail.service';
 import { createVizQuickQuoteWithRetry } from '../../../products/viz/services/quickQuote.service';
@@ -16,9 +19,10 @@ async function runVizQuoteDocsEmailFlow(
   buildFullQuote: (
     quickQuote: VizQuickQuoteResponse,
   ) => ReturnType<typeof buildVizFullQuotePayload>,
+  buildQuickQuote: () => ReturnType<typeof buildVizQuickQuotePayload> = buildVizQuickQuotePayload,
 ): Promise<void> {
   const quickQuoteResponse = await createVizQuickQuoteWithRetry(
-    buildVizQuickQuotePayload,
+    buildQuickQuote,
   );
 
   expectApiStatus(quickQuoteResponse, 201);
@@ -55,7 +59,10 @@ describe('Viz Quote Docs Email API', () => {
   it(
     'should email quote docs for monthly full quote',
     async () => {
-      await runVizQuoteDocsEmailFlow(buildVizMonthlyFullQuotePayload);
+      await runVizQuoteDocsEmailFlow(
+        buildVizMonthlyFullQuotePayload,
+        buildVizMonthlyQuickQuotePayload,
+      );
     },
     600000,
   );

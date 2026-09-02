@@ -79,6 +79,7 @@ export function mapVizFullQuoteResponseToEndorsementPayload(
     policyExpiryDate,
     endorsementEffectiveDate: policyStartDate,
     occupations: buildEndorsementOccupations(req.occupations, billingMode),
+    declarations: req.declarations,
     isMonthlySubscription:
       req.isMonthlySubscription ?? fullQuote.fullQuote.isMonthlySubscription ?? false,
     tools: vizEndorsementToolsTemplate,
@@ -126,6 +127,7 @@ function mergeVizEndorsementPayload(
       ...overrides.clientInformation,
     },
     occupations: overrides.occupations ?? base.occupations,
+    declarations: overrides.declarations ?? base.declarations,
     tools: {
       ...base.tools,
       ...overrides.tools,

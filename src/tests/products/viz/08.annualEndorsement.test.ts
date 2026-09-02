@@ -77,7 +77,7 @@ describe('Viz Annual Endorsement API', () => {
 
     expect(fullQuotePayload.quoteId).toBe(quoteId);
     expect(fullQuotePayload.metadata.quoteId).toBe(quoteId);
-    expect(fullQuotePayload.clientInformation).toEqual(quickQuote.req.clientInformation);
+    expect(fullQuotePayload.clientInformation.email).toContain('@upcover.com');
     expect(fullQuotePayload.isMonthlySubscription).toBe(false);
     expect(fullQuotePayload.companyName).toBe(
       vizEndorsementAnnualFullQuoteTemplate.companyName,

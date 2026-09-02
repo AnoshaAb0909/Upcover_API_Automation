@@ -4,7 +4,10 @@ import {
   resolveVizQuickQuoteId,
 } from '../../../products/viz/data/fullQuote.payload';
 import { defaultVizFullQuoteTemplate } from '../../../products/viz/data/fullQuote.defaults';
-import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
+import {
+  buildVizMonthlyQuickQuotePayload,
+  buildVizQuickQuotePayload,
+} from '../../../products/viz/data/quickQuote.payload';
 import { createVizFullQuote } from '../../../products/viz/services/fullQuote.service';
 import { createVizQuickQuoteWithRetry } from '../../../products/viz/services/quickQuote.service';
 import type { VizFullQuoteResponse } from '../../../products/viz/types/fullQuote.types';
@@ -36,12 +39,10 @@ describe('Viz Full Quote API', () => {
       expect(fullQuotePayload.excess).toBe(500);
       expect(fullQuotePayload.tools.include).toBe(true);
       expect(fullQuotePayload.taxAudit.include).toBe(true);
-      expect(fullQuotePayload.clientInformation.email).toBe(
-        quickQuote.req.clientInformation.email,
-      );
-      expect(fullQuotePayload.occupations).toEqual(
-        defaultVizFullQuoteTemplate.occupations,
-      );
+      expect(fullQuotePayload.clientInformation.email).toContain('@upcover.com');
+      expect(fullQuotePayload.occupations).toEqual(quickQuote.req.occupations);
+      expect(fullQuotePayload.declarations).toEqual(quickQuote.req.declarations);
+      expect(fullQuotePayload.occupations[0]).not.toHaveProperty('secondDeclaration');
       expect(fullQuotePayload.isMonthlySubscription).toBe(false);
 
       const fullQuoteResponse = await createVizFullQuote(fullQuotePayload);
@@ -61,7 +62,7 @@ describe('Viz Full Quote API', () => {
     'should create monthly full quote using quoteId mapped from quick quote response',
     async () => {
       const quickQuoteResponse = await createVizQuickQuoteWithRetry(
-        buildVizQuickQuotePayload,
+        buildVizMonthlyQuickQuotePayload,
       );
 
       expectApiStatus(quickQuoteResponse, 201);
@@ -73,12 +74,9 @@ describe('Viz Full Quote API', () => {
       expect(fullQuotePayload.quoteId).toBe(quoteId);
       expect(fullQuotePayload.metadata.quoteId).toBe(quoteId);
       expect(fullQuotePayload.isMonthlySubscription).toBe(true);
-      expect(fullQuotePayload.clientInformation.email).toBe(
-        quickQuote.req.clientInformation.email,
-      );
-      expect(fullQuotePayload.occupations).toEqual(
-        defaultVizFullQuoteTemplate.occupations,
-      );
+      expect(fullQuotePayload.clientInformation.email).toContain('@upcover.com');
+      expect(fullQuotePayload.occupations).toEqual(quickQuote.req.occupations);
+      expect(fullQuotePayload.declarations).toEqual(quickQuote.req.declarations);
 
       const fullQuoteResponse = await createVizFullQuote(fullQuotePayload);
 

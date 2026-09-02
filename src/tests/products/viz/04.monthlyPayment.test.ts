@@ -1,6 +1,6 @@
 import { buildVizMonthlyFullQuotePayload } from '../../../products/viz/data/fullQuote.payload';
 import { buildVizMonthlyPaymentPayloadFromFullQuote } from '../../../products/viz/data/payment.payload';
-import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
+import { buildVizMonthlyQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
 import { createVizFullQuote } from '../../../products/viz/services/fullQuote.service';
 import { createVizMonthlyPayment } from '../../../products/viz/services/payment.service';
 import { createVizQuickQuoteWithRetry } from '../../../products/viz/services/quickQuote.service';
@@ -13,7 +13,7 @@ describe('Viz Monthly Payment API', () => {
     'should run fresh quick quote and monthly full quote, then post monthly payment',
     async () => {
       const quickQuoteResponse = await createVizQuickQuoteWithRetry(
-        buildVizQuickQuotePayload,
+        buildVizMonthlyQuickQuotePayload,
       );
 
       expectApiStatus(quickQuoteResponse, 201);

@@ -1,6 +1,11 @@
 export interface VizOccupationInput {
   occupationId: string;
-  secondDeclaration: boolean;
+  secondDeclaration?: boolean;
+}
+
+export interface VizDeclarationInput {
+  id: string;
+  answer: boolean;
 }
 
 export interface VizClientInformation {
@@ -12,10 +17,10 @@ export interface VizClientInformation {
 
 export interface VizQuickQuotePayload {
   companyRevenue: number;
-  clientInformation: VizClientInformation;
-  occupations: VizOccupationInput[];
+  occupations: Array<{ occupationId: string }>;
+  declarations: VizDeclarationInput[];
   state: string;
   aggregateLimit: number;
   excess: number;
-  partnerId: string;
+  isMonthlySubscription?: boolean;
 }

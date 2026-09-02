@@ -1,9 +1,23 @@
+import { generateDummyClientInformation } from '../../../shared/data/dummyData';
 import {
   buildDefaultVizPolicyDates,
   defaultVizFullQuoteTemplate,
 } from './fullQuote.defaults';
+import { DEFAULT_VIZ_PHONE_NUMBER } from './quickQuote.defaults';
 import type { VizFullQuotePayload } from '../types/fullQuote.payload.types';
+import type { VizClientInformation } from '../types/quickQuote.payload.types';
 import type { VizQuickQuoteResponse } from '../types/quickQuote.types';
+
+function buildVizFullQuoteClientInformation(): VizClientInformation {
+  const dummyClient = generateDummyClientInformation();
+
+  return {
+    firstName: dummyClient.firstName,
+    lastName: dummyClient.lastName,
+    email: dummyClient.email,
+    phoneNumber: DEFAULT_VIZ_PHONE_NUMBER,
+  };
+}
 
 export function resolveVizQuickQuoteId(quickQuote: VizQuickQuoteResponse): string {
   return quickQuote.id;
@@ -30,7 +44,10 @@ export function mapVizQuickQuoteResponseToFullQuotePayload(
     policyStartDate,
     policyExpiryDate,
     isMonthlySubscription,
-    clientInformation: quickQuote.req.clientInformation,
+    clientInformation: buildVizFullQuoteClientInformation(),
+    occupations: quickQuote.req.occupations ?? defaultVizFullQuoteTemplate.occupations,
+    declarations:
+      quickQuote.req.declarations ?? defaultVizFullQuoteTemplate.declarations,
     metadata: {
       quoteId,
     },
@@ -73,6 +90,7 @@ function mergeVizFullQuotePayload(
       ...overrides.clientInformation,
     },
     occupations: overrides.occupations ?? base.occupations,
+    declarations: overrides.declarations ?? base.declarations,
     tools: {
       ...base.tools,
       ...overrides.tools,

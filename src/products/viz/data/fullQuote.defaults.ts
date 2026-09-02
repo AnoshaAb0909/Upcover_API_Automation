@@ -1,3 +1,7 @@
+import {
+  VIZ_QUICK_QUOTE_DECLARATION_ID,
+  VIZ_QUICK_QUOTE_OCCUPATION_ID,
+} from './quickQuote.defaults';
 import type { VizFullQuotePayload } from '../types/fullQuote.payload.types';
 
 export const defaultVizCompanyAddress: VizFullQuotePayload['companyAddress'] = {
@@ -32,12 +36,18 @@ export const defaultVizAbnDetails: VizFullQuotePayload['abnDetails'] = {
 
 export const defaultVizFullQuoteOccupations: VizFullQuotePayload['occupations'] = [
   {
-    occupationId: '51a52b8b-6119-4256-93ea-31e795d0b8fe',
-    secondDeclaration: false,
+    occupationId: VIZ_QUICK_QUOTE_OCCUPATION_ID,
   },
 ];
 
-/** Static full quote body template; quoteId and clientInformation come from quick quote. */
+export const defaultVizFullQuoteDeclarations: VizFullQuotePayload['declarations'] = [
+  {
+    id: VIZ_QUICK_QUOTE_DECLARATION_ID,
+    answer: false,
+  },
+];
+
+/** Static full quote body template; quoteId comes from quick quote, clientInformation is generated. */
 export const defaultVizFullQuoteTemplate: Omit<
   VizFullQuotePayload,
   'quoteId' | 'clientInformation' | 'metadata'
@@ -55,6 +65,7 @@ export const defaultVizFullQuoteTemplate: Omit<
   policyStartDate: '',
   policyExpiryDate: '',
   occupations: defaultVizFullQuoteOccupations,
+  declarations: defaultVizFullQuoteDeclarations,
   isMonthlySubscription: false,
   tools: {
     include: true,

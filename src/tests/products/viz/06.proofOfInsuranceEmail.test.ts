@@ -8,7 +8,10 @@ import {
 } from '../../../products/viz/data/payment.payload';
 import { buildVizProofOfInsuranceEmailPayload } from '../../../products/viz/data/proofOfInsuranceEmail.payload';
 import { VIZ_NOTIFICATION_EMAIL } from '../../../products/viz/data/vizNotificationEmail';
-import { buildVizQuickQuotePayload } from '../../../products/viz/data/quickQuote.payload';
+import {
+  buildVizMonthlyQuickQuotePayload,
+  buildVizQuickQuotePayload,
+} from '../../../products/viz/data/quickQuote.payload';
 import { createVizFullQuote } from '../../../products/viz/services/fullQuote.service';
 import {
   createVizAnnualPayment,
@@ -36,9 +39,10 @@ async function runVizProofOfInsuranceEmailFlow(
   ) =>
     | ReturnType<typeof createVizAnnualPayment>
     | Promise<ReturnType<typeof createVizAnnualPayment>>,
+  buildQuickQuote: () => ReturnType<typeof buildVizQuickQuotePayload> = buildVizQuickQuotePayload,
 ): Promise<void> {
   const quickQuoteResponse = await createVizQuickQuoteWithRetry(
-    buildVizQuickQuotePayload,
+    buildQuickQuote,
   );
 
   expectApiStatus(quickQuoteResponse, 201);
@@ -97,6 +101,7 @@ describe('Viz Proof of Insurance Email API', () => {
           createVizMonthlyPayment(
             await buildVizMonthlyPaymentPayloadFromFullQuote(fullQuote),
           ),
+        buildVizMonthlyQuickQuotePayload,
       );
     },
     600000,

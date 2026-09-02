@@ -29,12 +29,13 @@ export function defineAhpFlowTests(
   const paymentLabel = isMonthly ? 'monthly' : 'annual';
 
   describe(suiteTitle, () => {
-    describe('Quick Quote', () => {
-      let quickQuoteRequest: Awaited<
-        ReturnType<typeof runAhpQuickQuoteStep>
-      >['quickQuoteRequest'];
-      let quickQuote: Awaited<ReturnType<typeof runAhpQuickQuoteStep>>['quickQuote'];
+    let quickQuoteRequest: Awaited<
+      ReturnType<typeof runAhpQuickQuoteStep>
+    >['quickQuoteRequest'];
+    let quickQuote: Awaited<ReturnType<typeof runAhpQuickQuoteStep>>['quickQuote'];
+    let context: AhpFlowContext;
 
+    describe('Quick Quote', () => {
       beforeAll(async () => {
         ({ quickQuoteRequest, quickQuote } = await runAhpQuickQuoteStep());
       }, FLOW_TIMEOUT_MS);
@@ -60,10 +61,8 @@ export function defineAhpFlowTests(
     });
 
     describe('Full Quote', () => {
-      let context: AhpFlowContext;
-
       beforeAll(async () => {
-        context = await runAhpFullQuoteStep(mode);
+        context = await runAhpFullQuoteStep(mode, { quickQuoteRequest, quickQuote });
       }, FLOW_TIMEOUT_MS);
 
       it('should map quick quote policyRequestId into full quote payload quoteId', () => {
@@ -106,11 +105,9 @@ export function defineAhpFlowTests(
     });
 
     describe(`${paymentLabel} payment mapping`, () => {
-      let context: AhpFlowContext;
       let paymentPayload: AhpAnnualPaymentPayload | AhpMonthlyPaymentPayload;
 
       beforeAll(async () => {
-        context = await runAhpFullQuoteStep(mode);
         paymentPayload = isMonthly
           ? await buildAhpMonthlyPaymentPayloadFromFullQuote(
               context.fullQuote,
@@ -142,7 +139,7 @@ export function defineAhpFlowTests(
 
     describe(`${paymentLabel} payment API`, () => {
       it(`should post ${paymentLabel} payment for the bound quote`, async () => {
-        await runAhpPaymentStep(mode);
+        await runAhpPaymentStep(mode, context);
       }, FLOW_TIMEOUT_MS);
     });
   });
