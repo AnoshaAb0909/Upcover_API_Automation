@@ -11,9 +11,16 @@ function isReferralDenied(response: Response): boolean {
   );
 }
 
-function isToiScanInProgress(response: Response): boolean {
+function isTransientCoalitionFailure(response: Response): boolean {
+  if (response.status !== 500) {
+    return false;
+  }
+
   const message = String(response.body?.message ?? '');
-  return response.status === 500 && message.includes('TOI scan in progress');
+  return (
+    message.includes('TOI scan in progress') ||
+    message.includes('Request to coalition failed')
+  );
 }
 
 function sleep(ms: number): Promise<void> {
@@ -28,7 +35,7 @@ export async function createQuickQuote(
 
 /**
  * Retries quick quote when Coalition returns referral denial (next real test company)
- * or when a TOI scan is still in progress (same payload, delayed retry).
+ * or a transient 500 (TOI scan / partner request failed) with the same payload.
  */
 export async function createQuickQuoteWithRetry(
   buildPayload: () => QuickQuotePayload = buildQuickQuotePayload,
@@ -41,7 +48,7 @@ export async function createQuickQuoteWithRetry(
   let response = await createQuickQuote(payload);
 
   for (let attempt = 1; attempt < maxAttempts; attempt += 1) {
-    if (isToiScanInProgress(response)) {
+    if (isTransientCoalitionFailure(response)) {
       await sleep(retryDelayMs);
       response = await createQuickQuote(payload);
       continue;
