@@ -85,6 +85,8 @@ export const env = {
     process.env.MOTOR_TOT_OTP_VERIFY_PATH ?? '/motor-tot-au/auth/otp/verify',
   motorTotQuickQuotePath:
     process.env.MOTOR_TOT_QUICK_QUOTE_PATH ?? '/motor-tot-au/quick-quote',
+  motorTotFullQuotePath:
+    process.env.MOTOR_TOT_FULL_QUOTE_PATH ?? '/motor-tot-au/full-quote',
   mailosaurServerId: readEnv(process.env.MAILOSAUR_SERVER_ID),
   mailosaurApiKey: readEnv(process.env.MAILOSAUR_API_KEY),
   mailosaurOtpTimeoutMs: Number(process.env.MAILOSAUR_OTP_TIMEOUT_MS ?? 60000),

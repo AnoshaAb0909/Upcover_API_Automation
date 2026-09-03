@@ -1,10 +1,14 @@
 import { fetchOtpFromMailosaur } from '../../../core/mailosaur/fetchOtpFromMailosaur';
+import { buildMotorTotFullQuotePayload } from '../../../products/motorTot/data/fullQuote.payload';
 import { buildMotorTotQuickQuotePayload } from '../../../products/motorTot/data/quickQuote.payload';
 import { extractMotorTotAccessToken } from '../../../products/motorTot/helpers/extractMotorTotAccessToken';
 import { buildMotorTotOtpVerifyPayload } from '../../../products/motorTot/data/otpVerify.payload';
+import { createMotorTotFullQuote } from '../../../products/motorTot/services/fullQuote.service';
 import { createMotorTotQuickQuote } from '../../../products/motorTot/services/quickQuote.service';
 import { verifyMotorTotOtp } from '../../../products/motorTot/services/otpVerify.service';
+import type { MotorTotFullQuotePayload } from '../../../products/motorTot/types/fullQuote.payload.types';
 import type { MotorTotQuickQuotePayload } from '../../../products/motorTot/types/quickQuote.payload.types';
+import type { MotorTotQuickQuoteResponse } from '../../../products/motorTot/types/quickQuote.response.types';
 import type { MotorTotRegisterPayload } from '../../../products/motorTot/types/register.payload.types';
 import { expectApiStatus } from '../../helpers/expectApiStatus';
 import type { Response } from 'supertest';
@@ -149,4 +153,46 @@ export async function runMotorTotQuickQuoteFlow(
   const quickQuote = await createMotorTotQuickQuote(quickQuotePayload);
 
   return { register, accessToken, quickQuotePayload, quickQuote };
+}
+
+/**
+ * Authenticate → quick quote → full quote using the QQ `id` as `quoteId`.
+ */
+export async function runMotorTotFullQuoteFlow(
+  fullQuoteOverrides: Partial<MotorTotFullQuotePayload> = {},
+  quickQuoteOverrides: Partial<MotorTotQuickQuotePayload> = {},
+  registerOverrides: Partial<MotorTotRegisterPayload> = {},
+): Promise<{
+  register: MotorTotRegisterContext;
+  accessToken: string;
+  quickQuotePayload: MotorTotQuickQuotePayload;
+  quickQuote: Response;
+  quickQuoteId: string;
+  fullQuotePayload: MotorTotFullQuotePayload;
+  fullQuote: Response;
+}> {
+  const { register, accessToken, quickQuotePayload, quickQuote } =
+    await runMotorTotQuickQuoteFlow(quickQuoteOverrides, registerOverrides);
+
+  expectApiStatus(quickQuote, 201);
+
+  const quickQuoteBody = quickQuote.body as MotorTotQuickQuoteResponse;
+  expect(quickQuoteBody.status).toBe('indicative-quote-generated');
+
+  const quickQuoteId = quickQuoteBody.id;
+  const fullQuotePayload = buildMotorTotFullQuotePayload(
+    quickQuoteId,
+    fullQuoteOverrides,
+  );
+  const fullQuote = await createMotorTotFullQuote(fullQuotePayload);
+
+  return {
+    register,
+    accessToken,
+    quickQuotePayload,
+    quickQuote,
+    quickQuoteId,
+    fullQuotePayload,
+    fullQuote,
+  };
 }

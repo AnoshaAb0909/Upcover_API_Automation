@@ -10,7 +10,7 @@
     "test:ahp": "jest --testPathPatterns=products/ahp --runInBand --testSequencer=./src/tests/ahpTestSequencer.js",
     "test:motortot": "jest --testPathPatterns=products/motorTot --runInBand",
     "test:viz": "jest --testPathPatterns=products/viz --runInBand --testSequencer=./src/tests/vizTestSequencer.js",
-    "test:ci": "jest --testPathPatterns='products/coalition/03|products/coalition/04|products/viz|products/ahp|products/motorTot/04' --runInBand --testSequencer=./src/tests/ciTestSequencer.js",
+    "test:ci": "jest --testPathPatterns='products/coalition/03|products/coalition/04|products/viz|products/ahp|products/motorTot/05' --runInBand --testSequencer=./src/tests/ciTestSequencer.js",
     "test:ci:dev": "TARGET_ENV=dev npm run test:ci",
     "test:ci:staging": "TARGET_ENV=staging npm run test:ci",
     "test:report": "jest && open reports/test-report.html"
