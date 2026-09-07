@@ -11,6 +11,15 @@ function isReferralDenied(response: Response): boolean {
   );
 }
 
+function isQuoteBeingIssued(response: Response): boolean {
+  return (
+    response.status === 500 &&
+    String(response.body?.message ?? '').includes(
+      'already being issued by another process',
+    )
+  );
+}
+
 function isTransientCoalitionFailure(response: Response): boolean {
   if (response.status !== 500) {
     return false;
@@ -19,7 +28,8 @@ function isTransientCoalitionFailure(response: Response): boolean {
   const message = String(response.body?.message ?? '');
   return (
     message.includes('TOI scan in progress') ||
-    message.includes('Request to coalition failed')
+    message.includes('Request to coalition failed') ||
+    isQuoteBeingIssued(response)
   );
 }
 
@@ -35,7 +45,8 @@ export async function createQuickQuote(
 
 /**
  * Retries quick quote when Coalition returns referral denial (next real test company)
- * or a transient 500 (TOI scan / partner request failed) with the same payload.
+ * or a transient 500 (TOI scan / partner request failed / quote being issued).
+ * Issuance locks rotate to a new company; other 500s reuse the same payload.
  */
 export async function createQuickQuoteWithRetry(
   buildPayload: () => QuickQuotePayload = buildQuickQuotePayload,
@@ -61,6 +72,9 @@ export async function createQuickQuoteWithRetry(
 
       transientRetries += 1;
       await sleep(retryDelayMs);
+      if (isQuoteBeingIssued(response)) {
+        payload = buildPayload();
+      }
       response = await createQuickQuote(payload);
       continue;
     }
