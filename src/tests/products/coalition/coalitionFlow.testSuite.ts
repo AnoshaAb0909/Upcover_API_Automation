@@ -35,9 +35,10 @@ export function defineCoalitionFlowTests(
   const paymentLabel = isMonthly ? 'monthly' : 'annual';
 
   describe(suiteTitle, () => {
-    describe('Quick Quote', () => {
-      let quickQuote: QuickQuoteResponse;
+    let quickQuote: QuickQuoteResponse;
+    let context: CoalitionFlowContext;
 
+    describe('Quick Quote', () => {
       beforeAll(async () => {
         quickQuote = await runCoalitionQuickQuoteStep(mode);
       }, FLOW_TIMEOUT_MS);
@@ -63,10 +64,8 @@ export function defineCoalitionFlowTests(
     });
 
     describe('Full Quote', () => {
-      let context: CoalitionFlowContext;
-
       beforeAll(async () => {
-        context = await runCoalitionFullQuoteStep(mode);
+        context = await runCoalitionFullQuoteStep(mode, quickQuote);
       }, FLOW_TIMEOUT_MS);
 
       it('should map quick quote id into full quote payload quoteId', () => {
@@ -114,11 +113,9 @@ export function defineCoalitionFlowTests(
     });
 
     describe('Quote Docs Email', () => {
-      let context: CoalitionFlowContext;
       let quoteDocsPayload: ReturnType<typeof buildQuoteDocsEmailPayload>;
 
       beforeAll(async () => {
-        context = await runCoalitionFullQuoteStep(mode);
         quoteDocsPayload = buildQuoteDocsEmailPayload(context.fullQuote);
       }, FLOW_TIMEOUT_MS);
 
@@ -139,11 +136,9 @@ export function defineCoalitionFlowTests(
     });
 
     describe('Payment', () => {
-      let context: CoalitionFlowContext;
       let paymentPayload: AnnualPaymentPayload | MonthlyPaymentPayload;
 
       beforeAll(async () => {
-        context = await runCoalitionFullQuoteStep(mode);
         paymentPayload =
           mode === 'monthly'
             ? await buildMonthlyPaymentPayloadFromFullQuote(context.fullQuote)

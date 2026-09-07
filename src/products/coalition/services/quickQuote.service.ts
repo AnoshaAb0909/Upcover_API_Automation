@@ -39,16 +39,27 @@ export async function createQuickQuote(
  */
 export async function createQuickQuoteWithRetry(
   buildPayload: () => QuickQuotePayload = buildQuickQuotePayload,
-  options: { maxAttempts?: number; retryDelayMs?: number } = {},
+  options: {
+    maxAttempts?: number;
+    maxTransientRetries?: number;
+    retryDelayMs?: number;
+  } = {},
 ): Promise<Response> {
   const maxAttempts =
     options.maxAttempts ?? coalitionTestCompanies.length + 2;
+  const maxTransientRetries = options.maxTransientRetries ?? 5;
   const retryDelayMs = options.retryDelayMs ?? 15000;
   let payload = buildPayload();
   let response = await createQuickQuote(payload);
+  let transientRetries = 0;
 
   for (let attempt = 1; attempt < maxAttempts; attempt += 1) {
     if (isTransientCoalitionFailure(response)) {
+      if (transientRetries >= maxTransientRetries) {
+        break;
+      }
+
+      transientRetries += 1;
       await sleep(retryDelayMs);
       response = await createQuickQuote(payload);
       continue;
