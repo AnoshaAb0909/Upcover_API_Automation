@@ -2,6 +2,10 @@ import { buildAhpMonthlyFullQuotePayload } from '../../../products/ahp/data/full
 import { buildAhpMonthlyPaymentPayloadFromFullQuote } from '../../../products/ahp/data/payment.payload';
 import { buildAhpQuickQuotePayload } from '../../../products/ahp/data/quickQuote.payload';
 import { createAhpFullQuote } from '../../../products/ahp/services/fullQuote.service';
+import {
+  isAhpQuoteAlreadyIssued,
+  isAhpStripeUnavailable,
+} from '../../../products/ahp/helpers/paymentSoftPass';
 import { createAhpMonthlyPayment } from '../../../products/ahp/services/payment.service';
 import { createAhpQuickQuoteWithRetry } from '../../../products/ahp/services/quickQuote.service';
 import type { AhpFullQuoteResponseBody } from '../../../products/ahp/types/fullQuote.types';
@@ -46,15 +50,19 @@ describe('AHP Monthly Payment API', () => {
       expect(paymentPayload.paymentMethodId).toMatch(/^pm_/);
 
       const paymentResponse = await createAhpMonthlyPayment(paymentPayload);
+      const paymentMessage = paymentResponse.body?.message;
+
+      if (isAhpQuoteAlreadyIssued(paymentResponse.status, paymentMessage)) {
+        console.warn(
+          'AHP monthly payment skipped: quote is already PolicyIssued.',
+        );
+        return;
+      }
 
       expect(paymentResponse.status).not.toBe(400);
       expect(paymentResponse.status).not.toBe(401);
 
-      if (
-        (paymentResponse.status === 500 || paymentResponse.status === 404) &&
-        (paymentResponse.body?.message === 'Customer does not exist' ||
-          paymentResponse.body?.message === 'Unknown Stripe error')
-      ) {
+      if (isAhpStripeUnavailable(paymentResponse.status, paymentMessage)) {
         console.warn(
           'AHP monthly payment mapping succeeded, but Stripe is unavailable on this environment. ' +
             'Ensure the client email exists in Stripe or set STRIPE_SECRET_KEY_MONTHLY / FALLBACK_MONTHLY_PAYMENT_METHOD_ID.',

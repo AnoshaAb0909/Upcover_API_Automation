@@ -142,6 +142,20 @@ export async function fetchOtpFromMailosaur(
     await sleep(pollIntervalMs);
   }
 
+  // Unique inboxes can still miss a match when receivedAfter is ahead of Mailosaur's clock.
+  if (options.receivedAfter) {
+    const unfiltered = await mailosaurGet<MailosaurMessageList>(
+      `/messages?server=${serverId}&sentTo=${sentTo}`,
+    );
+    const latestMessage = sortMessagesNewestFirst(unfiltered.items ?? [])[0];
+    if (latestMessage?.id) {
+      const message = await mailosaurGet<MailosaurMessageBody>(
+        `/messages/${latestMessage.id}`,
+      );
+      return extractOtpFromMessage(message);
+    }
+  }
+
   throw new Error(
     `Timed out after ${timeoutMs}ms waiting for OTP email at ${email}.`,
   );

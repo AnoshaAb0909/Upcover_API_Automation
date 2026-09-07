@@ -127,14 +127,11 @@ export async function runMotorTotRegisterOtpVerifyFlow(
     }
 
     console.warn(
-      `MotorTOT OTP email not found for ${email}; resending OTP and polling again.`,
+      `MotorTOT OTP email not found for ${email}; resending OTP and polling the inbox without receivedAfter.`,
     );
-    const resentAfter = new Date(Date.now() - 2000);
     otpSend = await runMotorTotOtpSendStep(email);
-    const { response: otpVerify, code: otpCode } = await runMotorTotOtpVerifyStep(
-      email,
-      { receivedAfter: resentAfter },
-    );
+    const { response: otpVerify, code: otpCode } =
+      await runMotorTotOtpVerifyStep(email);
 
     return { register, otpSend, otpVerify, otpCode };
   }

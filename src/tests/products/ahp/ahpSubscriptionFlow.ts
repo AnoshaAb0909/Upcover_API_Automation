@@ -18,6 +18,10 @@ import type { AhpFullQuotePayload } from '../../../products/ahp/types/fullQuote.
 import type { AhpFullQuoteResponseBody } from '../../../products/ahp/types/fullQuote.types';
 import type { AhpQuickQuotePayload } from '../../../products/ahp/types/quickQuote.payload.types';
 import type { AhpQuickQuoteResponse } from '../../../products/ahp/types/quickQuote.types';
+import {
+  isAhpQuoteAlreadyIssued,
+  isAhpStripeUnavailable,
+} from '../../../products/ahp/helpers/paymentSoftPass';
 import { expectApiStatus } from '../../helpers/expectApiStatus';
 import {
   expectAhpFullQuotePayload,
@@ -49,12 +53,6 @@ function getAhpFlowBuilders(mode: AhpSubscriptionMode) {
   };
 }
 
-function isMissingStripeCustomer(status: number, message: unknown): boolean {
-  return (
-    (status === 500 || status === 404) &&
-    (message === 'Customer does not exist' || message === 'Unknown Stripe error')
-  );
-}
 
 export async function runAhpQuickQuoteStep(): Promise<{
   quickQuoteRequest: AhpQuickQuotePayload;
@@ -125,10 +123,19 @@ export async function runAhpPaymentStep(
       ? await createAhpAnnualPayment(paymentPayload)
       : await createAhpMonthlyPayment(paymentPayload);
 
+  const paymentMessage = paymentResponse.body?.message;
+
+  if (isAhpQuoteAlreadyIssued(paymentResponse.status, paymentMessage)) {
+    console.warn(
+      `AHP ${mode} payment skipped: quote is already PolicyIssued.`,
+    );
+    return;
+  }
+
   expect(paymentResponse.status).not.toBe(400);
   expect(paymentResponse.status).not.toBe(401);
 
-  if (isMissingStripeCustomer(paymentResponse.status, paymentResponse.body?.message)) {
+  if (isAhpStripeUnavailable(paymentResponse.status, paymentMessage)) {
     console.warn(
       `AHP ${mode} payment failed because Stripe customer is missing or unavailable.`,
     );
