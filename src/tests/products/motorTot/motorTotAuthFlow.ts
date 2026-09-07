@@ -54,15 +54,17 @@ export async function runMotorTotOtpVerifyStep(
   email: string,
   options: { code?: string; receivedAfter?: Date; maxAttempts?: number } = {},
 ): Promise<{ response: Response; code: string }> {
-  const maxAttempts = options.maxAttempts ?? 2;
+  const maxAttempts = options.maxAttempts ?? 3;
   let lastResponse: Response | undefined;
   let lastCode = '';
+  let receivedAfter = options.receivedAfter;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const otpCode =
       options.code ??
       (await fetchOtpFromMailosaur(email, {
-        receivedAfter: options.receivedAfter,
+        receivedAfter,
+        timeoutMs: attempt === 1 ? undefined : 45000,
       }));
     lastCode = otpCode;
     const payload = buildMotorTotOtpVerifyPayload(email, otpCode);
@@ -72,12 +74,20 @@ export async function runMotorTotOtpVerifyStep(
       return { response: lastResponse, code: otpCode };
     }
 
-    if (attempt < maxAttempts && lastResponse.status >= 500) {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-      continue;
+    const canResend =
+      !options.code &&
+      attempt < maxAttempts &&
+      (lastResponse.status >= 500 || lastResponse.status === 400);
+
+    if (!canResend) {
+      break;
     }
 
-    break;
+    console.warn(
+      `MotorTOT OTP verify returned ${lastResponse.status}; resending OTP (attempt ${attempt + 1}/${maxAttempts}).`,
+    );
+    await runMotorTotOtpSendStep(email);
+    receivedAfter = new Date(Date.now() - 2000);
   }
 
   expectApiStatus(lastResponse!, 200);
