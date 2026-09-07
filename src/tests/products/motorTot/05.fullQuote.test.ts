@@ -37,6 +37,6 @@ describe('MotorTOT AU Full Quote API', () => {
       expect(data.res.declarations.driversLicenseSuspended).toBe('NO');
       expect(fullQuotePayload.declarations.signOff.fullName).toBe('Umer Sajjad');
     },
-    240000,
+    300000,
   );
 });

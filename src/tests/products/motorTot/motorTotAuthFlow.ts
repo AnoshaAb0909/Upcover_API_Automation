@@ -22,6 +22,14 @@ export interface MotorTotRegisterContext {
   response: Response;
 }
 
+function isOtpEmailTimeout(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes('Timed out after') &&
+    message.includes('waiting for OTP email')
+  );
+}
+
 export async function runMotorTotRegisterStep(
   overrides: Partial<MotorTotRegisterPayload> = {},
 ): Promise<MotorTotRegisterContext> {
@@ -102,14 +110,34 @@ export async function runMotorTotRegisterOtpVerifyFlow(
 }> {
   const register = await runMotorTotRegisterStep(overrides);
   const email = register.payload.email;
-  const otpSend = await runMotorTotOtpSendStep(email);
-  const otpRequestedAt = new Date();
-  const { response: otpVerify, code: otpCode } = await runMotorTotOtpVerifyStep(
-    email,
-    { receivedAfter: otpRequestedAt },
-  );
+  // Stamp before send so a fast Mailosaur delivery is not filtered out.
+  const otpRequestedAt = new Date(Date.now() - 2000);
+  let otpSend = await runMotorTotOtpSendStep(email);
 
-  return { register, otpSend, otpVerify, otpCode };
+  try {
+    const { response: otpVerify, code: otpCode } = await runMotorTotOtpVerifyStep(
+      email,
+      { receivedAfter: otpRequestedAt },
+    );
+
+    return { register, otpSend, otpVerify, otpCode };
+  } catch (error) {
+    if (!isOtpEmailTimeout(error)) {
+      throw error;
+    }
+
+    console.warn(
+      `MotorTOT OTP email not found for ${email}; resending OTP and polling again.`,
+    );
+    const resentAfter = new Date(Date.now() - 2000);
+    otpSend = await runMotorTotOtpSendStep(email);
+    const { response: otpVerify, code: otpCode } = await runMotorTotOtpVerifyStep(
+      email,
+      { receivedAfter: resentAfter },
+    );
+
+    return { register, otpSend, otpVerify, otpCode };
+  }
 }
 
 /**
