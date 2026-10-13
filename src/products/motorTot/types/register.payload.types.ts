@@ -1,4 +1,4 @@
-export type MotorTotClientRole = 'motor-client';
+export type MotorTotClientRole = 'motor-client' | 'motor-rm';
 
 export interface MotorTotRegisterPayload {
   email: string;

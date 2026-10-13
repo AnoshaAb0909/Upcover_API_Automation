@@ -13,13 +13,27 @@ import type { MotorTotRegisterPayload } from '../../../products/motorTot/types/r
 import { expectApiStatus } from '../../helpers/expectApiStatus';
 import type { Response } from 'supertest';
 import { buildMotorTotOtpSendPayload } from '../../../products/motorTot/data/otpSend.payload';
+import {
+  MOTOR_TOT_REUSE_EMAIL,
+} from '../../../products/motorTot/data/register.defaults';
 import { buildMotorTotRegisterPayload } from '../../../products/motorTot/data/register.payload';
 import { sendMotorTotOtp } from '../../../products/motorTot/services/otpSend.service';
 import { registerMotorTotClient } from '../../../products/motorTot/services/register.service';
 
 export interface MotorTotRegisterContext {
   payload: MotorTotRegisterPayload;
-  response: Response;
+  response?: Response;
+}
+
+function existingMotorTotUser(
+  overrides: Partial<MotorTotRegisterPayload> = {},
+): MotorTotRegisterContext {
+  return {
+    payload: buildMotorTotRegisterPayload({
+      ...overrides,
+      email: overrides.email ?? MOTOR_TOT_REUSE_EMAIL,
+    }),
+  };
 }
 
 function sleep(ms: number): Promise<void> {
@@ -113,19 +127,19 @@ export async function runMotorTotOtpVerifyStep(
 }
 
 /**
- * Register a motor client, then request an OTP for the same Mailosaur email.
+ * Send OTP to the existing motor-rm Mailosaur user (no register).
  */
 export async function runMotorTotRegisterAndOtpSendFlow(
   overrides: Partial<MotorTotRegisterPayload> = {},
 ): Promise<{ register: MotorTotRegisterContext; otpSend: Response }> {
-  const register = await runMotorTotRegisterStep(overrides);
+  const register = existingMotorTotUser(overrides);
   const otpSend = await runMotorTotOtpSendStep(register.payload.email);
 
   return { register, otpSend };
 }
 
 /**
- * Register → send OTP → read OTP from Mailosaur → verify OTP.
+ * Send OTP → read OTP from Mailosaur → verify OTP (no register).
  */
 export async function runMotorTotRegisterOtpVerifyFlow(
   overrides: Partial<MotorTotRegisterPayload> = {},
@@ -135,7 +149,7 @@ export async function runMotorTotRegisterOtpVerifyFlow(
   otpVerify: Response;
   otpCode: string;
 }> {
-  const register = await runMotorTotRegisterStep(overrides);
+  const register = existingMotorTotUser(overrides);
   const email = register.payload.email;
   // Stamp before send so a fast Mailosaur delivery is not filtered out.
   const otpRequestedAt = new Date(Date.now() - 2000);
@@ -165,7 +179,7 @@ export async function runMotorTotRegisterOtpVerifyFlow(
 }
 
 /**
- * Register → OTP verify → extract Bearer token for authenticated MotorTOT calls.
+ * OTP verify → extract Bearer token for authenticated MotorTOT calls.
  */
 export async function runMotorTotAuthFlow(
   overrides: Partial<MotorTotRegisterPayload> = {},
