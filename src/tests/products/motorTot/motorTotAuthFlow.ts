@@ -22,6 +22,12 @@ export interface MotorTotRegisterContext {
   response: Response;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const OTP_VERIFY_DELAY_MS = 4000;
+
 function isOtpEmailTimeout(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return (
@@ -52,9 +58,15 @@ export async function runMotorTotOtpSendStep(email: string): Promise<Response> {
 
 export async function runMotorTotOtpVerifyStep(
   email: string,
-  options: { code?: string; receivedAfter?: Date; maxAttempts?: number } = {},
+  options: {
+    code?: string;
+    receivedAfter?: Date;
+    maxAttempts?: number;
+    verifyDelayMs?: number;
+  } = {},
 ): Promise<{ response: Response; code: string }> {
   const maxAttempts = options.maxAttempts ?? 3;
+  const verifyDelayMs = options.verifyDelayMs ?? OTP_VERIFY_DELAY_MS;
   let lastResponse: Response | undefined;
   let lastCode = '';
   let receivedAfter = options.receivedAfter;
@@ -67,6 +79,11 @@ export async function runMotorTotOtpVerifyStep(
         timeoutMs: attempt === 1 ? undefined : 45000,
       }));
     lastCode = otpCode;
+
+    if (verifyDelayMs > 0) {
+      await sleep(verifyDelayMs);
+    }
+
     const payload = buildMotorTotOtpVerifyPayload(email, otpCode);
     lastResponse = await verifyMotorTotOtp(payload);
 

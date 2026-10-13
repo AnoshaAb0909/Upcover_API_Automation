@@ -132,7 +132,7 @@ jobs:
               echo "MotorTOT tests require staging. Re-run with environment=staging."
               exit 1
             fi
-            npx jest --testPathPatterns=products/motorTot/04 --runInBand "${CI_ARGS[@]}"
+            npx jest --testPathPatterns=products/motorTot/05 --runInBand "${CI_ARGS[@]}"
           elif [ "$TARGET_ENV" != "staging" ]; then
             CI_ARGS=(--testPathIgnorePatterns=products/motorTot "${CI_ARGS[@]}")
             npm run test:ci -- "${CI_ARGS[@]}"
