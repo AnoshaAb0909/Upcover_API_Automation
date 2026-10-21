@@ -1,7 +1,7 @@
 import type { FullQuotePayload } from '../types/fullQuote.payload.types';
 
 export const COALITION_FULL_QUOTE_DOMAIN_NAMES: FullQuotePayload['domainNames'] = [
-  'www.success.coalitiontesting.com',
+  'www.upcover.com',
 ];
 
 export const defaultFullQuoteCompanyAddress: FullQuotePayload['companyAddress'] = {
