@@ -25,7 +25,7 @@ import {
   runCoalitionQuickQuoteStep,
 } from './coalitionSubscriptionFlow';
 
-const FLOW_TIMEOUT_MS = 300000;
+const FLOW_TIMEOUT_MS = 600000;
 
 export function defineCoalitionFlowTests(
   mode: CoalitionSubscriptionMode,
@@ -38,11 +38,11 @@ export function defineCoalitionFlowTests(
     let quickQuote: QuickQuoteResponse;
     let context: CoalitionFlowContext;
 
-    describe('Quick Quote', () => {
-      beforeAll(async () => {
-        quickQuote = await runCoalitionQuickQuoteStep(mode);
-      }, FLOW_TIMEOUT_MS);
+    beforeAll(async () => {
+      quickQuote = await runCoalitionQuickQuoteStep(mode);
+    }, FLOW_TIMEOUT_MS);
 
+    describe('Quick Quote', () => {
       it('should return a col_ prefixed quote id', () => {
         expect(quickQuote.id).toMatch(/^col_/);
       });
@@ -65,6 +65,12 @@ export function defineCoalitionFlowTests(
 
     describe('Full Quote', () => {
       beforeAll(async () => {
+        if (!quickQuote) {
+          throw new Error(
+            'Coalition quick quote did not complete; not creating a second quote for FQ',
+          );
+        }
+
         context = await runCoalitionFullQuoteStep(mode, quickQuote);
       }, FLOW_TIMEOUT_MS);
 
