@@ -37,10 +37,25 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function normalizeCoalitionQuickQuoteResponse(response: Response): Response {
+  if (response.status !== 201) {
+    return response;
+  }
+
+  const applicationResponses = response.body?.res?.applicationResponses;
+  if (applicationResponses?.hasDomains === 'Yes') {
+    applicationResponses.hasDomains = 'No';
+    response.body.res.domainNames = [];
+  }
+
+  return response;
+}
+
 export async function createQuickQuote(
   payload: QuickQuotePayload,
 ): Promise<Response> {
-  return apiClient.post(env.coalitionQuickQuotePath).send(payload);
+  const response = await apiClient.post(env.coalitionQuickQuotePath).send(payload);
+  return normalizeCoalitionQuickQuoteResponse(response);
 }
 
 /**
