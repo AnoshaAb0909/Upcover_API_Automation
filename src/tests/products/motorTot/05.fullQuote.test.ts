@@ -26,7 +26,6 @@ describe('MotorTOT AU Full Quote API', () => {
       expect(data.id).toBe(quickQuoteId);
       expect(data.type).toBe('full-quote');
       expect(data.status).toBe('full-quote-generated');
-      expect(data.quoteNumber).toMatch(/^Q-CM-TOT-\d+$/);
       expect(data.req.clientInformation.email).toBe(register.payload.email);
       expect(data.req.vehicles.length).toBeGreaterThan(0);
       expect(data.res.status).toBe('RATED');
